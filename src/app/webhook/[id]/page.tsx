@@ -130,6 +130,33 @@ export default function WebhookDetailPage({ params }: PageProps) {
         }
     };
 
+    const copyBody = async () => {
+        if (!selectedRequest?.body) return;
+        try {
+            const formatted = JSON.stringify(JSON.parse(selectedRequest.body), null, 2);
+            await navigator.clipboard.writeText(formatted);
+        } catch {
+            await navigator.clipboard.writeText(selectedRequest.body);
+        }
+        addToast('Body copied', 'success');
+    };
+
+    const deleteRequest = async (requestId: number) => {
+        try {
+            const response = await fetch(`/api/webhook/request/${requestId}`, { method: 'DELETE' });
+            if (response.ok) {
+                setRequests((prev) => prev.filter((r) => r.id !== requestId));
+                if (selectedRequest?.id === requestId) {
+                    setSelectedRequest(null);
+                }
+                addToast('Request deleted', 'success');
+            }
+        } catch (error) {
+            console.error(error);
+            addToast('Failed to delete', 'error');
+        }
+    };
+
     return (
         <div className={styles.container}>
             <div className={styles.backgroundGradient}></div>
@@ -194,7 +221,14 @@ export default function WebhookDetailPage({ params }: PageProps) {
                                     <span className={`${styles.method} ${getMethodColor(selectedRequest.method)}`}>
                                         {selectedRequest.method}
                                     </span>
-                                    <span>{formatFullTime(selectedRequest.created_at)}</span>
+                                    <span className={styles.timestamp}>{formatFullTime(selectedRequest.created_at)}</span>
+                                    <button
+                                        onClick={() => deleteRequest(selectedRequest.id)}
+                                        className={styles.deleteButton}
+                                        title="Delete request"
+                                    >
+                                        <TrashIcon size={16} />
+                                    </button>
                                 </div>
 
                                 <div className={styles.section}>
@@ -233,7 +267,12 @@ export default function WebhookDetailPage({ params }: PageProps) {
 
                                 {selectedRequest.body && (
                                     <div className={styles.section}>
-                                        <h3>Body</h3>
+                                        <div className={styles.sectionHeader}>
+                                            <h3>Body</h3>
+                                            <button onClick={copyBody} className={styles.copyBodyButton} title="Copy body">
+                                                <CopyIcon size={14} /> Copy
+                                            </button>
+                                        </div>
                                         <pre className={styles.code}>
                                             {(() => {
                                                 try {

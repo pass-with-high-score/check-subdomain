@@ -255,6 +255,58 @@
     word-break: break-all;
 }
 
+/* Detail Header */
+.timestamp {
+    flex: 1;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.deleteButton {
+    padding: 0.5rem;
+    background: transparent;
+    border: 2px solid #ff6b6b;
+    color: #ff6b6b;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.deleteButton:hover {
+    background: #ff6b6b;
+    color: white;
+}
+
+/* Section Header with actions */
+.sectionHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+.sectionHeader h3 {
+    margin: 0;
+}
+
+.copyBodyButton {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.5rem;
+    background: var(--neo-cyan);
+    border: 2px solid var(--neo-black);
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.copyBodyButton:hover {
+    background: var(--neo-green);
+}
+
 .noSelection {
     display: flex;
     align-items: center;
