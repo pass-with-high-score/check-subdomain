@@ -75,6 +75,64 @@
     background: var(--neo-yellow);
 }
 
+.headerActions {
+    display: flex;
+    gap: 0.25rem;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.exportButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.4rem;
+    background: var(--neo-cyan);
+    border: 2px solid var(--neo-black);
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.exportButton:hover {
+    background: var(--neo-green);
+}
+
+.clearButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.4rem;
+    background: var(--neo-white);
+    border: 2px solid var(--neo-black);
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.clearButton:hover {
+    background: #ff6b6b;
+    color: white;
+}
+
+.exportRequestButton {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.35rem 0.65rem;
+    margin-left: auto;
+    background: var(--neo-cyan);
+    border: 2px solid var(--neo-black);
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 0.6rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.exportRequestButton:hover {
+    background: var(--neo-green);
+}
+
 .dangerButton {
     padding: 0.875rem 1rem;
     background: #ff6b6b;
@@ -120,12 +178,23 @@
     justify-content: space-between;
     padding: 0.75rem 1rem;
     border-bottom: 3px solid var(--neo-black);
+    gap: 0.5rem;
 }
 
 .listHeader h2 {
     font-family: 'Lexend Mega', sans-serif;
-    font-size: 0.9rem;
+    font-size: 0.75rem;
     text-transform: uppercase;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.requestCount {
+    font-size: 0.65rem;
+    font-weight: 400;
+    color: var(--text-muted);
 }
 
 /* Filter Row */

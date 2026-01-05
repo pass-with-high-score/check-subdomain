@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Navigation from '@/components/Navigation';
 import Toast, { useToast } from '@/components/Toast';
-import { CopyIcon, CheckIcon, RefreshIcon, BoltIcon, TrashIcon, XIcon, AlertIcon } from '@/components/Icons';
+import { CopyIcon, CheckIcon, RefreshIcon, BoltIcon, TrashIcon, XIcon, AlertIcon, DownloadIcon } from '@/components/Icons';
 import styles from './page.module.css';
 
 // Language definitions with their variants
@@ -436,6 +436,70 @@ export default function WebhookDetailPage({ params }: PageProps) {
         }
     };
 
+    const exportData = () => {
+        if (requests.length === 0) {
+            addToast('No data to export', 'error');
+            return;
+        }
+
+        const exportPayload = {
+            endpoint_id: id,
+            webhook_url: webhookUrl,
+            exported_at: new Date().toISOString(),
+            total_requests: requests.length,
+            requests: requests.map(req => ({
+                id: req.id,
+                method: req.method,
+                headers: parseJsonField(req.headers),
+                body: req.body,
+                query_params: parseJsonField(req.query_params),
+                content_length: req.content_length,
+                created_at: req.created_at,
+            })),
+        };
+
+        const jsonString = JSON.stringify(exportPayload, null, 2);
+        const blob = new Blob([jsonString], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `webhook-${id}-export-${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        addToast(`Exported ${requests.length} requests`, 'success');
+    };
+
+    const exportSingleRequest = (request: WebhookRequest) => {
+        const exportPayload = {
+            endpoint_id: id,
+            webhook_url: webhookUrl,
+            exported_at: new Date().toISOString(),
+            request: {
+                id: request.id,
+                method: request.method,
+                headers: parseJsonField(request.headers),
+                body: request.body,
+                query_params: parseJsonField(request.query_params),
+                content_length: request.content_length,
+                created_at: request.created_at,
+            },
+        };
+
+        const jsonString = JSON.stringify(exportPayload, null, 2);
+        const blob = new Blob([jsonString], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `webhook-request-${request.id}-${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        addToast('Request exported', 'success');
+    };
+
     const deleteEndpoint = async () => {
         setShowDeleteDialog(false);
         try {
@@ -480,11 +544,16 @@ export default function WebhookDetailPage({ params }: PageProps) {
                     {/* Request List */}
                     <div className={styles.requestList}>
                         <div className={styles.listHeader}>
-                            <h2>Requests ({filteredRequests.length}/{requests.length})</h2>
+                            <h2>Requests <span className={styles.requestCount}>({filteredRequests.length}/{requests.length})</span></h2>
                             {requests.length > 0 && (
-                                <button onClick={() => setShowClearDialog(true)} className={styles.clearButton}>
-                                    Clear
-                                </button>
+                                <div className={styles.headerActions}>
+                                    <button onClick={exportData} className={styles.exportButton} title="Export all requests as JSON">
+                                        <DownloadIcon size={12} />
+                                    </button>
+                                    <button onClick={() => setShowClearDialog(true)} className={styles.clearButton} title="Clear all requests">
+                                        <TrashIcon size={12} />
+                                    </button>
+                                </div>
                             )}
                         </div>
 
@@ -572,6 +641,13 @@ export default function WebhookDetailPage({ params }: PageProps) {
                                         {selectedRequest.method}
                                     </span>
                                     <span className={styles.timestamp}>{formatFullTime(selectedRequest.created_at)}</span>
+                                    <button
+                                        onClick={() => exportSingleRequest(selectedRequest)}
+                                        className={styles.exportRequestButton}
+                                        title="Export this request"
+                                    >
+                                        <DownloadIcon size={14} /> Export
+                                    </button>
                                 </div>
 
                                 <div className={styles.section}>
