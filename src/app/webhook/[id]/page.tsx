@@ -32,6 +32,7 @@ export default function WebhookDetailPage({ params }: PageProps) {
     const [methodFilter, setMethodFilter] = useState<string>('ALL');
     const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
     const [searchQuery, setSearchQuery] = useState('');
+    const [bodyViewMode, setBodyViewMode] = useState<'pretty' | 'text' | 'preview'>('pretty');
     const { toasts, addToast, removeToast } = useToast();
     const router = useRouter();
 
@@ -164,6 +165,82 @@ export default function WebhookDetailPage({ params }: PageProps) {
             await navigator.clipboard.writeText(selectedRequest.body);
         }
         addToast('Body copied', 'success');
+    };
+
+    const getContentType = (headers: Record<string, string> | string): string => {
+        const h = parseJsonField(headers);
+        return (h['content-type'] || h['Content-Type'] || '').toLowerCase();
+    };
+
+    const getMediaType = (contentType: string): 'image' | 'audio' | 'video' | 'other' => {
+        if (contentType.startsWith('image/')) return 'image';
+        if (contentType.startsWith('audio/')) return 'audio';
+        if (contentType.startsWith('video/')) return 'video';
+        return 'other';
+    };
+
+    interface MultipartPart {
+        name: string;
+        filename?: string;
+        contentType?: string;
+        data: string;
+    }
+
+    const parseMultipartFormData = (body: string, contentType: string): MultipartPart[] => {
+        const parts: MultipartPart[] = [];
+        const boundaryMatch = contentType.match(/boundary=([^;]+)/);
+        if (!boundaryMatch) return parts;
+
+        const boundary = '--' + boundaryMatch[1].trim();
+        const sections = body.split(boundary).filter(s => s.trim() && s.trim() !== '--');
+
+        for (const section of sections) {
+            const headerEnd = section.indexOf('\r\n\r\n');
+            if (headerEnd === -1) continue;
+
+            const headerPart = section.substring(0, headerEnd);
+            const dataPart = section.substring(headerEnd + 4).replace(/\r\n$/, '');
+
+            const nameMatch = headerPart.match(/name="([^"]+)"/);
+            const filenameMatch = headerPart.match(/filename="([^"]+)"/);
+            const ctMatch = headerPart.match(/Content-Type:\s*([^\r\n]+)/i);
+
+            if (nameMatch) {
+                parts.push({
+                    name: nameMatch[1],
+                    filename: filenameMatch?.[1],
+                    contentType: ctMatch?.[1]?.trim(),
+                    data: dataPart
+                });
+            }
+        }
+        return parts;
+    };
+
+    // Decode body if it was stored as base64 (binary content)
+    const getDecodedBody = (request: WebhookRequest): string => {
+        const params = parseJsonField(request.query_params);
+        if (params['_binary'] === 'true') {
+            try {
+                return atob(request.body);
+            } catch {
+                return request.body;
+            }
+        }
+        return request.body;
+    };
+
+    const downloadBody = () => {
+        if (!selectedRequest?.body) return;
+        const decodedBody = getDecodedBody(selectedRequest);
+        const contentType = getContentType(selectedRequest.headers);
+        const blob = new Blob([decodedBody], { type: contentType || 'application/octet-stream' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `request-${selectedRequest.id}-body`;
+        a.click();
+        URL.revokeObjectURL(url);
     };
 
     const deleteRequest = async (requestId: number) => {
@@ -392,19 +469,207 @@ export default function WebhookDetailPage({ params }: PageProps) {
                                     <div className={styles.section}>
                                         <div className={styles.sectionHeader}>
                                             <h3>Body</h3>
+                                            <div className={styles.bodyTabs}>
+                                                <button
+                                                    className={`${styles.bodyTab} ${bodyViewMode === 'pretty' ? styles.bodyTabActive : ''}`}
+                                                    onClick={() => setBodyViewMode('pretty')}
+                                                >
+                                                    Pretty
+                                                </button>
+                                                <button
+                                                    className={`${styles.bodyTab} ${bodyViewMode === 'text' ? styles.bodyTabActive : ''}`}
+                                                    onClick={() => setBodyViewMode('text')}
+                                                >
+                                                    Text
+                                                </button>
+                                                <button
+                                                    className={`${styles.bodyTab} ${bodyViewMode === 'preview' ? styles.bodyTabActive : ''}`}
+                                                    onClick={() => setBodyViewMode('preview')}
+                                                >
+                                                    Preview
+                                                </button>
+                                            </div>
                                             <button onClick={copyBody} className={styles.copyBodyButton} title="Copy body">
                                                 <CopyIcon size={14} /> Copy
                                             </button>
                                         </div>
-                                        <pre className={styles.code}>
-                                            {(() => {
-                                                try {
-                                                    return JSON.stringify(JSON.parse(selectedRequest.body), null, 2);
-                                                } catch {
-                                                    return selectedRequest.body;
-                                                }
-                                            })()}
-                                        </pre>
+
+                                        {(() => {
+                                            const decodedBody = getDecodedBody(selectedRequest);
+                                            const contentType = getContentType(selectedRequest.headers);
+                                            const isMultipart = contentType.includes('multipart/form-data');
+
+                                            return (
+                                                <>
+                                                    {bodyViewMode === 'pretty' && (
+                                                        isMultipart ? (
+                                                            <div className={styles.multipartSummary}>
+                                                                {parseMultipartFormData(decodedBody, contentType).map((part, i) => (
+                                                                    <div key={i} className={styles.partSummary}>
+                                                                        <div className={styles.partSummaryHeader}>
+                                                                            <strong>{part.name}</strong>
+                                                                            {part.filename && <span className={styles.partFilename}>{part.filename}</span>}
+                                                                        </div>
+                                                                        {part.contentType ? (
+                                                                            <div className={styles.partMeta}>
+                                                                                <span>Type: {part.contentType}</span>
+                                                                                <span>Size: {part.data.length} bytes</span>
+                                                                            </div>
+                                                                        ) : (
+                                                                            <pre className={styles.partValue}>{part.data}</pre>
+                                                                        )}
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        ) : (
+                                                            <pre className={styles.code}>
+                                                                {(() => {
+                                                                    try {
+                                                                        return JSON.stringify(JSON.parse(decodedBody), null, 2);
+                                                                    } catch {
+                                                                        return decodedBody;
+                                                                    }
+                                                                })()}
+                                                            </pre>
+                                                        )
+                                                    )}
+
+                                                    {bodyViewMode === 'text' && (
+                                                        isMultipart ? (
+                                                            <div className={styles.multipartSummary}>
+                                                                {parseMultipartFormData(decodedBody, contentType).map((part, i) => (
+                                                                    <div key={i} className={styles.partSummary}>
+                                                                        <div className={styles.partSummaryHeader}>
+                                                                            <strong>{part.name}</strong>
+                                                                            {part.filename && <span className={styles.partFilename}>{part.filename}</span>}
+                                                                        </div>
+                                                                        {part.contentType ? (
+                                                                            <pre className={styles.partValue}>[Binary: {part.data.length} bytes]</pre>
+                                                                        ) : (
+                                                                            <pre className={styles.partValue}>{part.data}</pre>
+                                                                        )}
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        ) : (
+                                                            <pre className={styles.code}>{decodedBody}</pre>
+                                                        )
+                                                    )}
+
+                                                    {bodyViewMode === 'preview' && (
+                                                        <div className={styles.previewContainer}>
+                                                            {(() => {
+                                                                const contentType = getContentType(selectedRequest.headers);
+                                                                const mediaType = getMediaType(contentType);
+
+                                                                // Handle multipart/form-data
+                                                                if (contentType.includes('multipart/form-data')) {
+                                                                    const parts = parseMultipartFormData(decodedBody, contentType);
+                                                                    const fileParts = parts.filter(p => p.filename && p.contentType);
+
+                                                                    if (fileParts.length === 0) {
+                                                                        return (
+                                                                            <div className={styles.noPreview}>
+                                                                                <p>No file parts found in multipart data</p>
+                                                                                <p className={styles.partsInfo}>
+                                                                                    Found {parts.length} field(s): {parts.map(p => p.name).join(', ')}
+                                                                                </p>
+                                                                            </div>
+                                                                        );
+                                                                    }
+
+                                                                    return (
+                                                                        <div className={styles.multipartParts}>
+                                                                            {fileParts.map((part, index) => {
+                                                                                const partMediaType = getMediaType(part.contentType || '');
+                                                                                return (
+                                                                                    <div key={index} className={styles.partItem}>
+                                                                                        <div className={styles.partHeader}>
+                                                                                            <strong>{part.filename}</strong>
+                                                                                            <span className={styles.partType}>{part.contentType}</span>
+                                                                                        </div>
+                                                                                        {partMediaType === 'image' && (
+                                                                                            <img
+                                                                                                src={`data:${part.contentType};base64,${btoa(part.data)}`}
+                                                                                                alt={part.filename}
+                                                                                                className={styles.mediaPreview}
+                                                                                            />
+                                                                                        )}
+                                                                                        {partMediaType === 'audio' && (
+                                                                                            <audio controls className={styles.mediaPreview}>
+                                                                                                <source src={`data:${part.contentType};base64,${btoa(part.data)}`} type={part.contentType} />
+                                                                                            </audio>
+                                                                                        )}
+                                                                                        {partMediaType === 'video' && (
+                                                                                            <video controls className={styles.mediaPreview}>
+                                                                                                <source src={`data:${part.contentType};base64,${btoa(part.data)}`} type={part.contentType} />
+                                                                                            </video>
+                                                                                        )}
+                                                                                        {partMediaType === 'other' && (
+                                                                                            <p className={styles.noMediaPreview}>Cannot preview this file type</p>
+                                                                                        )}
+                                                                                    </div>
+                                                                                );
+                                                                            })}
+                                                                        </div>
+                                                                    );
+                                                                }
+
+                                                                if (mediaType === 'image') {
+                                                                    return (
+                                                                        <img
+                                                                            src={`data:${contentType};base64,${btoa(decodedBody)}`}
+                                                                            alt="Preview"
+                                                                            className={styles.mediaPreview}
+                                                                        />
+                                                                    );
+                                                                }
+
+                                                                if (mediaType === 'audio') {
+                                                                    return (
+                                                                        <audio controls className={styles.mediaPreview}>
+                                                                            <source src={`data:${contentType};base64,${btoa(decodedBody)}`} type={contentType} />
+                                                                        </audio>
+                                                                    );
+                                                                }
+
+                                                                if (mediaType === 'video') {
+                                                                    return (
+                                                                        <video controls className={styles.mediaPreview}>
+                                                                            <source src={`data:${contentType};base64,${btoa(decodedBody)}`} type={contentType} />
+                                                                        </video>
+                                                                    );
+                                                                }
+
+                                                                // Handle text/JSON content - show formatted
+                                                                if (contentType.includes('json') || contentType.startsWith('text/') || !contentType) {
+                                                                    return (
+                                                                        <pre className={styles.code}>
+                                                                            {(() => {
+                                                                                try {
+                                                                                    return JSON.stringify(JSON.parse(decodedBody), null, 2);
+                                                                                } catch {
+                                                                                    return decodedBody;
+                                                                                }
+                                                                            })()}
+                                                                        </pre>
+                                                                    );
+                                                                }
+
+                                                                return (
+                                                                    <div className={styles.noPreview}>
+                                                                        <p>Preview not available for {contentType || 'this content type'}</p>
+                                                                        <button onClick={downloadBody} className={styles.downloadButton}>
+                                                                            Download Body
+                                                                        </button>
+                                                                    </div>
+                                                                );
+                                                            })()}
+                                                        </div>
+                                                    )}
+                                                </>
+                                            );
+                                        })()}
                                     </div>
                                 )}
                             </>
@@ -415,7 +680,7 @@ export default function WebhookDetailPage({ params }: PageProps) {
                         )}
                     </div>
                 </div>
-            </main >
+            </main>
 
             {/* Clear All Dialog */}
             {

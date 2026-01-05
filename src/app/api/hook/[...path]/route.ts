@@ -40,12 +40,29 @@ async function handleWebhook(request: NextRequest, { params }: RouteParams) {
             queryParams['_path'] = '/' + pathParams.join('/');
         }
 
-        // Get body
+        // Get body as ArrayBuffer for binary safety
         let body = '';
+        let isBinary = false;
         try {
-            body = await request.text();
+            const arrayBuffer = await request.arrayBuffer();
+            const bytes = new Uint8Array(arrayBuffer);
+
+            // Check if content is binary (contains null bytes or non-UTF8)
+            const textDecoder = new TextDecoder('utf-8', { fatal: true });
+            try {
+                body = textDecoder.decode(bytes);
+            } catch {
+                // Binary content - encode as base64
+                isBinary = true;
+                body = Buffer.from(bytes).toString('base64');
+            }
         } catch {
             // No body
+        }
+
+        // Add binary flag to queryParams if needed
+        if (isBinary) {
+            queryParams['_binary'] = 'true';
         }
 
         const contentLength = body.length;

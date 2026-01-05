@@ -347,6 +347,164 @@
     overflow-y: auto;
 }
 
+/* Body Tabs */
+.bodyTabs {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.bodyTab {
+    padding: 0.25rem 0.5rem;
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 0.55rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    background: var(--neo-white);
+    border: 2px solid var(--neo-black);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.bodyTab:hover {
+    background: #f0f0f0;
+}
+
+.bodyTabActive {
+    background: var(--neo-yellow);
+}
+
+/* Preview */
+.previewContainer {
+    border: 3px solid var(--neo-black);
+    padding: 1rem;
+    background: #f5f5f5;
+    min-height: 100px;
+}
+
+.mediaPreview {
+    max-width: 100%;
+    max-height: 300px;
+    display: block;
+}
+
+.noPreview {
+    text-align: center;
+    padding: 2rem 1rem;
+    color: var(--text-muted);
+}
+
+.noPreview p {
+    margin-bottom: 1rem;
+}
+
+.downloadButton {
+    padding: 0.75rem 1.5rem;
+    background: var(--neo-cyan);
+    border: 3px solid var(--neo-black);
+    font-family: 'Lexend Mega', sans-serif;
+    font-weight: 700;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.downloadButton:hover {
+    background: var(--neo-yellow);
+}
+
+/* Multipart Parts */
+.multipartParts {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.partItem {
+    border: 2px solid var(--neo-black);
+    background: var(--neo-white);
+}
+
+.partHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0.75rem;
+    background: #f0f0f0;
+    border-bottom: 2px solid var(--neo-black);
+}
+
+.partHeader strong {
+    font-size: 0.85rem;
+}
+
+.partType {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    font-family: monospace;
+}
+
+.partsInfo {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 0.5rem;
+}
+
+.noMediaPreview {
+    padding: 1rem;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+
+/* Multipart Summary (Pretty/Text mode) */
+.multipartSummary {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.partSummary {
+    border: 2px solid var(--neo-black);
+    background: var(--neo-white);
+}
+
+.partSummaryHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0.75rem;
+    background: #e8e8e8;
+    border-bottom: 2px solid var(--neo-black);
+    font-size: 0.85rem;
+}
+
+.partFilename {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+.partMeta {
+    display: flex;
+    gap: 1rem;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.partValue {
+    padding: 0.5rem 0.75rem;
+    margin: 0;
+    font-family: 'Geist Mono', monospace;
+    font-size: 0.8rem;
+    background: #f5f5f5;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
 /* Headers Table */
 .tableWrapper {
     border: 3px solid var(--neo-black);
