@@ -181,7 +181,7 @@ export default function Home() {
         onClick={() => setShowSettings(!showSettings)}
         className={styles.settingsToggle}
       >
-        {showSettings ? '▼ Hide Settings' : '▶ API Settings'}
+        {showSettings ? <><ChevronDownIcon size={16} /> Hide Settings</> : <><ChevronRightIcon size={16} /> API Settings</>}
       </button>
 
       {/* Settings Panel */}
