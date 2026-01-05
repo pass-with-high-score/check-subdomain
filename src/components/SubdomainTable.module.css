@@ -27,7 +27,7 @@
     left: 14px;
     top: 50%;
     transform: translateY(-50%);
-    font-size: 1.1rem;
+    color: var(--neo-black);
 }
 
 .searchInput {
@@ -228,7 +228,8 @@
 }
 
 .cloudflareIcon {
-    font-size: 1rem;
+    display: inline-block;
+    vertical-align: middle;
 }
 
 .cloudflareNo {

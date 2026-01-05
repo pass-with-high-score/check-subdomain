@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react';
 import styles from './SubdomainTable.module.css';
 import Toast, { useToast } from './Toast';
+import { SearchIcon, CopyIcon, CloudIcon } from './Icons';
 
 interface ScanResult {
     subdomain: string;
@@ -106,7 +107,7 @@ export default function SubdomainTable({ subdomains }: SubdomainTableProps) {
             {/* Controls */}
             <div className={styles.controls}>
                 <div className={styles.searchWrapper}>
-                    <span className={styles.searchIcon}>🔍</span>
+                    <SearchIcon size={18} className={styles.searchIcon} />
                     <input
                         type="text"
                         value={search}
@@ -132,7 +133,7 @@ export default function SubdomainTable({ subdomains }: SubdomainTableProps) {
                 </div>
 
                 <button onClick={handleCopyAll} className={styles.copyAllButton}>
-                    📋 Copy All ({filteredAndSorted.length})
+                    <CopyIcon size={16} /> Copy All ({filteredAndSorted.length})
                 </button>
             </div>
 
@@ -184,7 +185,7 @@ export default function SubdomainTable({ subdomains }: SubdomainTableProps) {
                                     {item.ip && (
                                         item.cloudflare ? (
                                             <span className={styles.cloudflareYes}>
-                                                <span className={styles.cloudflareIcon}>☁️</span> Yes
+                                                <CloudIcon size={16} className={styles.cloudflareIcon} /> Yes
                                             </span>
                                         ) : (
                                             <span className={styles.cloudflareNo}>No</span>
@@ -197,7 +198,7 @@ export default function SubdomainTable({ subdomains }: SubdomainTableProps) {
                                         className={styles.copyButton}
                                         title="Copy subdomain"
                                     >
-                                        📋
+                                        <CopyIcon size={16} />
                                     </button>
                                 </td>
                             </tr>

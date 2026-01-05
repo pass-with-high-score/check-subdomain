@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import styles from './Toast.module.css';
+import { CheckIcon, XIcon, InfoIcon } from './Icons';
 
 export interface ToastMessage {
     id: number;
@@ -42,13 +43,19 @@ function ToastItem({ toast, onRemove }: { toast: ToastMessage; onRemove: () => v
             ? styles.toastInfo
             : styles.toastSuccess;
 
+    const Icon = toast.type === 'error'
+        ? XIcon
+        : toast.type === 'info'
+            ? InfoIcon
+            : CheckIcon;
+
     return (
         <div
             className={`${styles.toast} ${typeClass} ${isExiting ? styles.toastExit : ''}`}
             onClick={onRemove}
         >
             <span className={styles.toastIcon}>
-                {toast.type === 'error' ? '✗' : toast.type === 'info' ? 'ℹ' : '✓'}
+                <Icon size={20} />
             </span>
             <span className={styles.toastMessage}>{toast.message}</span>
         </div>
