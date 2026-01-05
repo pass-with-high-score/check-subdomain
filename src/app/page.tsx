@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import SubdomainTable from '@/components/SubdomainTable';
+import Navigation from '@/components/Navigation';
 import { SearchIcon, BoltIcon, AlertIcon, DownloadIcon, GithubIcon, WarningIcon } from '@/components/Icons';
 import styles from './page.module.css';
 
@@ -158,6 +159,9 @@ export default function Home() {
       {/* Background Effects */}
       <div className={styles.backgroundGradient}></div>
       <div className={styles.backgroundGrid}></div>
+
+      {/* Navigation */}
+      <Navigation />
 
       {/* Header */}
       <header className={styles.header}>
