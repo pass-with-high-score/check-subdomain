@@ -270,6 +270,9 @@ export default function WebhookDetailPage({ params }: PageProps) {
     const generateCurlCommand = useCallback((request: WebhookRequest): string => {
         const headers = parseJsonField(request.headers);
         const queryParams = parseJsonField(request.query_params);
+        const isBinary = queryParams['_binary'] === 'true';
+        const contentType = getContentType(request.headers);
+        const isMultipart = contentType.includes('multipart/form-data');
 
         // Build URL with query params (excluding internal params like _path, _binary)
         let url = webhookUrl;
@@ -280,7 +283,14 @@ export default function WebhookDetailPage({ params }: PageProps) {
             url += '?' + searchParams.toString();
         }
 
-        let cmd = `curl -X ${request.method} '${url}'`;
+        let cmd = '';
+
+        // For binary/multipart data, use base64 decode pipe
+        if (request.body && (isBinary || isMultipart)) {
+            cmd = `echo '${request.body}' | base64 -d | curl -X ${request.method} '${url}'`;
+        } else {
+            cmd = `curl -X ${request.method} '${url}'`;
+        }
 
         // Add headers (excluding some internal ones)
         const skipHeaders = ['host', 'content-length', 'connection', 'accept-encoding'];
@@ -294,10 +304,14 @@ export default function WebhookDetailPage({ params }: PageProps) {
 
         // Add body if present
         if (request.body) {
-            const decodedBody = getDecodedBody(request);
-            // Escape single quotes in body
-            const escapedBody = decodedBody.replace(/'/g, "'\\''");
-            cmd += ` \\\n  -d '${escapedBody}'`;
+            if (isBinary || isMultipart) {
+                // Binary data - use stdin from the pipe
+                cmd += ` \\\n  --data-binary @-`;
+            } else {
+                // Regular text body
+                const escapedBody = request.body.replace(/'/g, "'\\''");
+                cmd += ` \\\n  -d '${escapedBody}'`;
+            }
         }
 
         return cmd;
@@ -317,13 +331,39 @@ export default function WebhookDetailPage({ params }: PageProps) {
         const generateCode = async () => {
             setIsGeneratingCode(true);
             try {
-                const curlCmd = generateCurlCommand(selectedRequest);
+                const headers = parseJsonField(selectedRequest.headers);
+                const queryParams = parseJsonField(selectedRequest.query_params);
+                const isBinary = queryParams['_binary'] === 'true';
+                const contentType = getContentType(selectedRequest.headers);
+                const isMultipart = contentType.includes('multipart/form-data');
+
+                // Build URL with query params (excluding internal params)
+                let url = webhookUrl;
+                const filteredParams = Object.entries(queryParams)
+                    .filter(([key]) => !key.startsWith('_'));
+                if (filteredParams.length > 0) {
+                    const searchParams = new URLSearchParams(filteredParams);
+                    url += '?' + searchParams.toString();
+                }
+
+                // Filter out internal headers
+                const skipHeaders = ['host', 'content-length', 'connection', 'accept-encoding'];
+                const filteredHeaders: Record<string, string> = {};
+                for (const [key, value] of Object.entries(headers)) {
+                    if (!skipHeaders.includes(key.toLowerCase())) {
+                        filteredHeaders[key] = value;
+                    }
+                }
 
                 const response = await fetch('/api/generate-code', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        curlCommand: curlCmd,
+                        method: selectedRequest.method,
+                        url,
+                        headers: filteredHeaders,
+                        body: selectedRequest.body || null,
+                        isBinary: isBinary || isMultipart,
                         language: selectedLanguage,
                         variant: selectedVariant,
                     }),
@@ -346,7 +386,7 @@ export default function WebhookDetailPage({ params }: PageProps) {
         };
 
         generateCode();
-    }, [selectedRequest, selectedLanguage, selectedVariant, generateCurlCommand]);
+    }, [selectedRequest, selectedLanguage, selectedVariant, webhookUrl]);
 
     // Update variant when language changes
     useEffect(() => {

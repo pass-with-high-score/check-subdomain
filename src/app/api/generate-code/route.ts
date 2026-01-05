@@ -1,78 +1,175 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 interface RequestData {
-    curlCommand: string;
+    method: string;
+    url: string;
+    headers: Record<string, string>;
+    body: string | null;
+    isBinary: boolean;
     language: string;
     variant: string;
 }
 
-// Parse curl command into structured data
-function parseCurlCommand(curlCmd: string): {
-    method: string;
-    url: string;
-    headers: Record<string, string>;
-    data: string | null;
-} {
-    const result = {
-        method: 'GET',
-        url: '',
-        headers: {} as Record<string, string>,
-        data: null as string | null,
-    };
+// Generate curl command
+function toCurl(data: RequestData): string {
+    let cmd = '';
 
-    // Extract method
-    const methodMatch = curlCmd.match(/-X\s+(\w+)/);
-    if (methodMatch) {
-        result.method = methodMatch[1];
+    if (data.body && data.isBinary) {
+        cmd = `echo '${data.body}' | base64 -d | curl -X ${data.method} '${data.url}'`;
+    } else {
+        cmd = `curl -X ${data.method} '${data.url}'`;
     }
 
-    // Extract URL (first quoted string after curl command)
-    const urlMatch = curlCmd.match(/curl\s+-X\s+\w+\s+'([^']+)'/);
-    if (urlMatch) {
-        result.url = urlMatch[1];
+    for (const [key, value] of Object.entries(data.headers)) {
+        const escapedValue = value.replace(/'/g, "'\\''");
+        cmd += ` \\\n  -H '${key}: ${escapedValue}'`;
     }
 
-    // Extract headers
-    const headerMatches = curlCmd.matchAll(/-H\s+'([^:]+):\s*([^']+)'/g);
-    for (const match of headerMatches) {
-        result.headers[match[1]] = match[2];
+    if (data.body) {
+        if (data.isBinary) {
+            cmd += ` \\\n  --data-binary @-`;
+        } else {
+            const escapedBody = data.body.replace(/'/g, "'\\''");
+            cmd += ` \\\n  -d '${escapedBody}'`;
+        }
     }
 
-    // Extract data
-    const dataMatch = curlCmd.match(/-d\s+'([\s\S]+)'$/);
-    if (dataMatch) {
-        // Unescape single quotes
-        result.data = dataMatch[1].replace(/'\\''/g, "'");
+    return cmd;
+}
+
+// Generate wget code
+function toWget(data: RequestData): string {
+    let cmd = '';
+
+    if (data.body && data.isBinary) {
+        cmd = `echo '${data.body}' | base64 -d | wget --method=${data.method}`;
+    } else {
+        cmd = `wget --method=${data.method}`;
     }
 
-    return result;
+    for (const [key, value] of Object.entries(data.headers)) {
+        cmd += ` \\\n  --header='${key}: ${value}'`;
+    }
+
+    if (data.body) {
+        if (data.isBinary) {
+            cmd += ` \\\n  --body-file=-`;
+        } else {
+            cmd += ` \\\n  --body-data='${data.body}'`;
+        }
+    }
+
+    cmd += ` \\\n  '${data.url}'`;
+
+    return cmd;
+}
+
+// Generate HTTPie code
+function toHttpie(data: RequestData): string {
+    let cmd = '';
+
+    if (data.body && data.isBinary) {
+        cmd = `echo '${data.body}' | base64 -d | http ${data.method} '${data.url}'`;
+    } else {
+        cmd = `http ${data.method} '${data.url}'`;
+    }
+
+    for (const [key, value] of Object.entries(data.headers)) {
+        cmd += ` \\\n  '${key}:${value}'`;
+    }
+
+    if (data.body && !data.isBinary) {
+        try {
+            const jsonData = JSON.parse(data.body);
+            for (const [key, value] of Object.entries(jsonData)) {
+                cmd += ` \\\n  ${key}='${value}'`;
+            }
+        } catch {
+            cmd += ` \\\n  --raw='${data.body}'`;
+        }
+    }
+
+    return cmd;
+}
+
+// Generate PowerShell code
+function toPowershell(data: RequestData): string {
+    let code = '';
+
+    if (Object.keys(data.headers).length > 0) {
+        code += '$headers = @{\n';
+        for (const [key, value] of Object.entries(data.headers)) {
+            code += `    '${key}' = '${value}'\n`;
+        }
+        code += '}\n\n';
+    }
+
+    if (data.body) {
+        if (data.isBinary) {
+            code += `$bodyBase64 = '${data.body}'\n`;
+            code += '$bodyBytes = [Convert]::FromBase64String($bodyBase64)\n\n';
+        } else {
+            code += `$body = '${data.body.replace(/'/g, "''")}'\n\n`;
+        }
+    }
+
+    code += 'Invoke-RestMethod `\n';
+    code += `    -Uri '${data.url}' \`\n`;
+    code += `    -Method ${data.method}`;
+
+    if (Object.keys(data.headers).length > 0) {
+        code += ' `\n    -Headers $headers';
+    }
+
+    if (data.body) {
+        if (data.isBinary) {
+            code += ' `\n    -Body $bodyBytes';
+        } else {
+            code += ' `\n    -Body $body';
+        }
+    }
+
+    return code;
 }
 
 // Generate Python requests code
-function toPython(parsed: ReturnType<typeof parseCurlCommand>): string {
-    let code = 'import requests\n\n';
+function toPython(data: RequestData): string {
+    let code = 'import requests\n';
+    if (data.isBinary) {
+        code += 'import base64\n';
+    }
+    code += '\n';
 
-    if (Object.keys(parsed.headers).length > 0) {
+    if (Object.keys(data.headers).length > 0) {
         code += 'headers = {\n';
-        for (const [key, value] of Object.entries(parsed.headers)) {
+        for (const [key, value] of Object.entries(data.headers)) {
             code += `    '${key}': '${value}',\n`;
         }
         code += '}\n\n';
     }
 
-    if (parsed.data) {
-        code += `data = '${parsed.data.replace(/'/g, "\\'")}'\n\n`;
+    if (data.body) {
+        if (data.isBinary) {
+            code += `body_base64 = '${data.body}'\n`;
+            code += 'body = base64.b64decode(body_base64)\n\n';
+        } else {
+            code += `data = '${data.body.replace(/'/g, "\\'")}'\n\n`;
+        }
     }
 
-    code += `response = requests.${parsed.method.toLowerCase()}(\n`;
-    code += `    '${parsed.url}',\n`;
+    code += `response = requests.${data.method.toLowerCase()}(\n`;
+    code += `    '${data.url}',\n`;
 
-    if (Object.keys(parsed.headers).length > 0) {
+    if (Object.keys(data.headers).length > 0) {
         code += '    headers=headers,\n';
     }
 
-    if (parsed.data) {
-        code += '    data=data,\n';
+    if (data.body) {
+        if (data.isBinary) {
+            code += '    data=body,\n';
+        } else {
+            code += '    data=data,\n';
+        }
     }
 
     code += ')\n';
@@ -82,20 +179,36 @@ function toPython(parsed: ReturnType<typeof parseCurlCommand>): string {
 }
 
 // Generate JavaScript fetch code
-function toJavaScriptFetch(parsed: ReturnType<typeof parseCurlCommand>): string {
-    let code = `fetch('${parsed.url}', {\n`;
-    code += `    method: '${parsed.method}',\n`;
+function toJavaScriptFetch(data: RequestData): string {
+    let code = '';
 
-    if (Object.keys(parsed.headers).length > 0) {
+    if (data.isBinary && data.body) {
+        code += `// Decode base64 body\n`;
+        code += `const base64Body = '${data.body}';\n`;
+        code += `const binaryBody = atob(base64Body);\n`;
+        code += `const bytes = new Uint8Array(binaryBody.length);\n`;
+        code += `for (let i = 0; i < binaryBody.length; i++) {\n`;
+        code += `    bytes[i] = binaryBody.charCodeAt(i);\n`;
+        code += `}\n\n`;
+    }
+
+    code += `fetch('${data.url}', {\n`;
+    code += `    method: '${data.method}',\n`;
+
+    if (Object.keys(data.headers).length > 0) {
         code += '    headers: {\n';
-        for (const [key, value] of Object.entries(parsed.headers)) {
+        for (const [key, value] of Object.entries(data.headers)) {
             code += `        '${key}': '${value}',\n`;
         }
         code += '    },\n';
     }
 
-    if (parsed.data) {
-        code += `    body: ${JSON.stringify(parsed.data)},\n`;
+    if (data.body) {
+        if (data.isBinary) {
+            code += '    body: bytes,\n';
+        } else {
+            code += `    body: ${JSON.stringify(data.body)},\n`;
+        }
     }
 
     code += '})\n';
@@ -107,11 +220,23 @@ function toJavaScriptFetch(parsed: ReturnType<typeof parseCurlCommand>): string 
 }
 
 // Generate JavaScript XHR code
-function toJavaScriptXHR(parsed: ReturnType<typeof parseCurlCommand>): string {
-    let code = 'const xhr = new XMLHttpRequest();\n';
-    code += `xhr.open('${parsed.method}', '${parsed.url}');\n\n`;
+function toJavaScriptXHR(data: RequestData): string {
+    let code = '';
 
-    for (const [key, value] of Object.entries(parsed.headers)) {
+    if (data.isBinary && data.body) {
+        code += `// Decode base64 body\n`;
+        code += `const base64Body = '${data.body}';\n`;
+        code += `const binaryBody = atob(base64Body);\n`;
+        code += `const bytes = new Uint8Array(binaryBody.length);\n`;
+        code += `for (let i = 0; i < binaryBody.length; i++) {\n`;
+        code += `    bytes[i] = binaryBody.charCodeAt(i);\n`;
+        code += `}\n\n`;
+    }
+
+    code += 'const xhr = new XMLHttpRequest();\n';
+    code += `xhr.open('${data.method}', '${data.url}');\n\n`;
+
+    for (const [key, value] of Object.entries(data.headers)) {
         code += `xhr.setRequestHeader('${key}', '${value}');\n`;
     }
 
@@ -119,8 +244,12 @@ function toJavaScriptXHR(parsed: ReturnType<typeof parseCurlCommand>): string {
     code += '    console.log(xhr.responseText);\n';
     code += '};\n\n';
 
-    if (parsed.data) {
-        code += `xhr.send(${JSON.stringify(parsed.data)});`;
+    if (data.body) {
+        if (data.isBinary) {
+            code += 'xhr.send(bytes);';
+        } else {
+            code += `xhr.send(${JSON.stringify(data.body)});`;
+        }
     } else {
         code += 'xhr.send();';
     }
@@ -129,23 +258,34 @@ function toJavaScriptXHR(parsed: ReturnType<typeof parseCurlCommand>): string {
 }
 
 // Generate Axios code
-function toAxios(parsed: ReturnType<typeof parseCurlCommand>): string {
-    let code = "const axios = require('axios');\n\n";
+function toAxios(data: RequestData): string {
+    let code = "const axios = require('axios');\n";
+
+    if (data.isBinary && data.body) {
+        code += `\n// Decode base64 body\n`;
+        code += `const base64Body = '${data.body}';\n`;
+        code += `const body = Buffer.from(base64Body, 'base64');\n`;
+    }
+    code += '\n';
 
     code += 'axios({\n';
-    code += `    method: '${parsed.method.toLowerCase()}',\n`;
-    code += `    url: '${parsed.url}',\n`;
+    code += `    method: '${data.method.toLowerCase()}',\n`;
+    code += `    url: '${data.url}',\n`;
 
-    if (Object.keys(parsed.headers).length > 0) {
+    if (Object.keys(data.headers).length > 0) {
         code += '    headers: {\n';
-        for (const [key, value] of Object.entries(parsed.headers)) {
+        for (const [key, value] of Object.entries(data.headers)) {
             code += `        '${key}': '${value}',\n`;
         }
         code += '    },\n';
     }
 
-    if (parsed.data) {
-        code += `    data: ${JSON.stringify(parsed.data)},\n`;
+    if (data.body) {
+        if (data.isBinary) {
+            code += '    data: body,\n';
+        } else {
+            code += `    data: ${JSON.stringify(data.body)},\n`;
+        }
     }
 
     code += '})\n';
@@ -156,27 +296,36 @@ function toAxios(parsed: ReturnType<typeof parseCurlCommand>): string {
 }
 
 // Generate Go code
-function toGo(parsed: ReturnType<typeof parseCurlCommand>): string {
+function toGo(data: RequestData): string {
     let code = 'package main\n\n';
     code += 'import (\n';
+    if (data.isBinary) {
+        code += '    "encoding/base64"\n';
+    }
     code += '    "fmt"\n';
     code += '    "io"\n';
     code += '    "net/http"\n';
-    if (parsed.data) {
-        code += '    "strings"\n';
+    if (data.body) {
+        code += '    "bytes"\n';
     }
     code += ')\n\n';
 
     code += 'func main() {\n';
 
-    if (parsed.data) {
-        code += `    body := strings.NewReader(\`${parsed.data}\`)\n`;
-        code += `    req, _ := http.NewRequest("${parsed.method}", "${parsed.url}", body)\n`;
+    if (data.body) {
+        if (data.isBinary) {
+            code += `    base64Body := "${data.body}"\n`;
+            code += '    bodyBytes, _ := base64.StdEncoding.DecodeString(base64Body)\n';
+            code += '    body := bytes.NewReader(bodyBytes)\n';
+        } else {
+            code += `    body := bytes.NewReader([]byte(\`${data.body}\`))\n`;
+        }
+        code += `    req, _ := http.NewRequest("${data.method}", "${data.url}", body)\n`;
     } else {
-        code += `    req, _ := http.NewRequest("${parsed.method}", "${parsed.url}", nil)\n`;
+        code += `    req, _ := http.NewRequest("${data.method}", "${data.url}", nil)\n`;
     }
 
-    for (const [key, value] of Object.entries(parsed.headers)) {
+    for (const [key, value] of Object.entries(data.headers)) {
         code += `    req.Header.Set("${key}", "${value}")\n`;
     }
 
@@ -191,23 +340,29 @@ function toGo(parsed: ReturnType<typeof parseCurlCommand>): string {
 }
 
 // Generate PHP code
-function toPhp(parsed: ReturnType<typeof parseCurlCommand>): string {
+function toPhp(data: RequestData): string {
     let code = '<?php\n\n';
     code += '$ch = curl_init();\n\n';
-    code += `curl_setopt($ch, CURLOPT_URL, '${parsed.url}');\n`;
+    code += `curl_setopt($ch, CURLOPT_URL, '${data.url}');\n`;
     code += 'curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);\n';
-    code += `curl_setopt($ch, CURLOPT_CUSTOMREQUEST, '${parsed.method}');\n\n`;
+    code += `curl_setopt($ch, CURLOPT_CUSTOMREQUEST, '${data.method}');\n\n`;
 
-    if (Object.keys(parsed.headers).length > 0) {
+    if (Object.keys(data.headers).length > 0) {
         code += 'curl_setopt($ch, CURLOPT_HTTPHEADER, [\n';
-        for (const [key, value] of Object.entries(parsed.headers)) {
+        for (const [key, value] of Object.entries(data.headers)) {
             code += `    '${key}: ${value}',\n`;
         }
         code += ']);\n\n';
     }
 
-    if (parsed.data) {
-        code += `curl_setopt($ch, CURLOPT_POSTFIELDS, '${parsed.data.replace(/'/g, "\\'")}');\n\n`;
+    if (data.body) {
+        if (data.isBinary) {
+            code += `$bodyBase64 = '${data.body}';\n`;
+            code += '$body = base64_decode($bodyBase64);\n';
+            code += 'curl_setopt($ch, CURLOPT_POSTFIELDS, $body);\n\n';
+        } else {
+            code += `curl_setopt($ch, CURLOPT_POSTFIELDS, '${data.body.replace(/'/g, "\\'")}');\n\n`;
+        }
     }
 
     code += '$response = curl_exec($ch);\n';
@@ -218,22 +373,30 @@ function toPhp(parsed: ReturnType<typeof parseCurlCommand>): string {
 }
 
 // Generate Ruby code
-function toRuby(parsed: ReturnType<typeof parseCurlCommand>): string {
+function toRuby(data: RequestData): string {
     let code = "require 'net/http'\n";
-    code += "require 'uri'\n\n";
+    code += "require 'uri'\n";
+    if (data.isBinary) {
+        code += "require 'base64'\n";
+    }
+    code += '\n';
 
-    code += `uri = URI.parse('${parsed.url}')\n`;
+    code += `uri = URI.parse('${data.url}')\n`;
     code += 'http = Net::HTTP.new(uri.host, uri.port)\n';
     code += 'http.use_ssl = true if uri.scheme == "https"\n\n';
 
-    code += `request = Net::HTTP::${parsed.method.charAt(0) + parsed.method.slice(1).toLowerCase()}.new(uri.request_uri)\n`;
+    code += `request = Net::HTTP::${data.method.charAt(0) + data.method.slice(1).toLowerCase()}.new(uri.request_uri)\n`;
 
-    for (const [key, value] of Object.entries(parsed.headers)) {
+    for (const [key, value] of Object.entries(data.headers)) {
         code += `request['${key}'] = '${value}'\n`;
     }
 
-    if (parsed.data) {
-        code += `request.body = '${parsed.data.replace(/'/g, "\\'")}'\n`;
+    if (data.body) {
+        if (data.isBinary) {
+            code += `request.body = Base64.decode64('${data.body}')\n`;
+        } else {
+            code += `request.body = '${data.body.replace(/'/g, "\\'")}'\n`;
+        }
     }
 
     code += '\nresponse = http.request(request)\n';
@@ -243,27 +406,40 @@ function toRuby(parsed: ReturnType<typeof parseCurlCommand>): string {
 }
 
 // Generate Java code
-function toJava(parsed: ReturnType<typeof parseCurlCommand>): string {
+function toJava(data: RequestData): string {
     let code = 'import java.net.http.HttpClient;\n';
     code += 'import java.net.http.HttpRequest;\n';
     code += 'import java.net.http.HttpResponse;\n';
-    code += 'import java.net.URI;\n\n';
+    code += 'import java.net.URI;\n';
+    if (data.isBinary) {
+        code += 'import java.util.Base64;\n';
+    }
+    code += '\n';
 
     code += 'public class Main {\n';
     code += '    public static void main(String[] args) throws Exception {\n';
     code += '        HttpClient client = HttpClient.newHttpClient();\n\n';
 
-    code += '        HttpRequest request = HttpRequest.newBuilder()\n';
-    code += `            .uri(URI.create("${parsed.url}"))\n`;
-    code += `            .method("${parsed.method}", `;
+    if (data.body && data.isBinary) {
+        code += `        String base64Body = "${data.body}";\n`;
+        code += '        byte[] bodyBytes = Base64.getDecoder().decode(base64Body);\n\n';
+    }
 
-    if (parsed.data) {
-        code += `HttpRequest.BodyPublishers.ofString("${parsed.data.replace(/"/g, '\\"')}"))\n`;
+    code += '        HttpRequest request = HttpRequest.newBuilder()\n';
+    code += `            .uri(URI.create("${data.url}"))\n`;
+    code += `            .method("${data.method}", `;
+
+    if (data.body) {
+        if (data.isBinary) {
+            code += 'HttpRequest.BodyPublishers.ofByteArray(bodyBytes))\n';
+        } else {
+            code += `HttpRequest.BodyPublishers.ofString("${data.body.replace(/"/g, '\\"')}"))\n`;
+        }
     } else {
         code += 'HttpRequest.BodyPublishers.noBody())\n';
     }
 
-    for (const [key, value] of Object.entries(parsed.headers)) {
+    for (const [key, value] of Object.entries(data.headers)) {
         code += `            .header("${key}", "${value}")\n`;
     }
 
@@ -277,7 +453,7 @@ function toJava(parsed: ReturnType<typeof parseCurlCommand>): string {
 }
 
 // Generate C# code
-function toCSharp(parsed: ReturnType<typeof parseCurlCommand>): string {
+function toCSharp(data: RequestData): string {
     let code = 'using System;\n';
     code += 'using System.Net.Http;\n';
     code += 'using System.Threading.Tasks;\n\n';
@@ -286,14 +462,20 @@ function toCSharp(parsed: ReturnType<typeof parseCurlCommand>): string {
     code += '    static async Task Main()\n    {\n';
     code += '        using var client = new HttpClient();\n\n';
 
-    code += `        var request = new HttpRequestMessage(HttpMethod.${parsed.method.charAt(0) + parsed.method.slice(1).toLowerCase()}, "${parsed.url}");\n`;
+    code += `        var request = new HttpRequestMessage(HttpMethod.${data.method.charAt(0) + data.method.slice(1).toLowerCase()}, "${data.url}");\n`;
 
-    for (const [key, value] of Object.entries(parsed.headers)) {
+    for (const [key, value] of Object.entries(data.headers)) {
         code += `        request.Headers.Add("${key}", "${value}");\n`;
     }
 
-    if (parsed.data) {
-        code += `        request.Content = new StringContent("${parsed.data.replace(/"/g, '\\"')}");\n`;
+    if (data.body) {
+        if (data.isBinary) {
+            code += `        var base64Body = "${data.body}";\n`;
+            code += '        var bodyBytes = Convert.FromBase64String(base64Body);\n';
+            code += '        request.Content = new ByteArrayContent(bodyBytes);\n';
+        } else {
+            code += `        request.Content = new StringContent("${data.body.replace(/"/g, '\\"')}");\n`;
+        }
     }
 
     code += '\n        var response = await client.SendAsync(request);\n';
@@ -304,26 +486,39 @@ function toCSharp(parsed: ReturnType<typeof parseCurlCommand>): string {
 }
 
 // Generate Kotlin code
-function toKotlin(parsed: ReturnType<typeof parseCurlCommand>): string {
+function toKotlin(data: RequestData): string {
     let code = 'import java.net.http.HttpClient\n';
     code += 'import java.net.http.HttpRequest\n';
     code += 'import java.net.http.HttpResponse\n';
-    code += 'import java.net.URI\n\n';
+    code += 'import java.net.URI\n';
+    if (data.isBinary) {
+        code += 'import java.util.Base64\n';
+    }
+    code += '\n';
 
     code += 'fun main() {\n';
     code += '    val client = HttpClient.newHttpClient()\n\n';
 
-    code += '    val request = HttpRequest.newBuilder()\n';
-    code += `        .uri(URI.create("${parsed.url}"))\n`;
-    code += `        .method("${parsed.method}", `;
+    if (data.body && data.isBinary) {
+        code += `    val base64Body = "${data.body}"\n`;
+        code += '    val bodyBytes = Base64.getDecoder().decode(base64Body)\n\n';
+    }
 
-    if (parsed.data) {
-        code += `HttpRequest.BodyPublishers.ofString("${parsed.data.replace(/"/g, '\\"')}"))\n`;
+    code += '    val request = HttpRequest.newBuilder()\n';
+    code += `        .uri(URI.create("${data.url}"))\n`;
+    code += `        .method("${data.method}", `;
+
+    if (data.body) {
+        if (data.isBinary) {
+            code += 'HttpRequest.BodyPublishers.ofByteArray(bodyBytes))\n';
+        } else {
+            code += `HttpRequest.BodyPublishers.ofString("${data.body.replace(/"/g, '\\"')}"))\n`;
+        }
     } else {
         code += 'HttpRequest.BodyPublishers.noBody())\n';
     }
 
-    for (const [key, value] of Object.entries(parsed.headers)) {
+    for (const [key, value] of Object.entries(data.headers)) {
         code += `        .header("${key}", "${value}")\n`;
     }
 
@@ -336,20 +531,33 @@ function toKotlin(parsed: ReturnType<typeof parseCurlCommand>): string {
 }
 
 // Generate Rust code
-function toRust(parsed: ReturnType<typeof parseCurlCommand>): string {
-    let code = 'use reqwest;\n\n';
+function toRust(data: RequestData): string {
+    let code = 'use reqwest;\n';
+    if (data.isBinary) {
+        code += 'use base64::Engine;\n';
+    }
+    code += '\n';
     code += '#[tokio::main]\n';
     code += 'async fn main() -> Result<(), Box<dyn std::error::Error>> {\n';
     code += '    let client = reqwest::Client::new();\n\n';
 
-    code += `    let response = client.${parsed.method.toLowerCase()}("${parsed.url}")\n`;
+    if (data.body && data.isBinary) {
+        code += `    let base64_body = "${data.body}";\n`;
+        code += '    let body_bytes = base64::engine::general_purpose::STANDARD.decode(base64_body)?;\n\n';
+    }
 
-    for (const [key, value] of Object.entries(parsed.headers)) {
+    code += `    let response = client.${data.method.toLowerCase()}("${data.url}")\n`;
+
+    for (const [key, value] of Object.entries(data.headers)) {
         code += `        .header("${key}", "${value}")\n`;
     }
 
-    if (parsed.data) {
-        code += `        .body("${parsed.data.replace(/"/g, '\\"')}")\n`;
+    if (data.body) {
+        if (data.isBinary) {
+            code += '        .body(body_bytes)\n';
+        } else {
+            code += `        .body("${data.body.replace(/"/g, '\\"')}")\n`;
+        }
     }
 
     code += '        .send()\n';
@@ -362,23 +570,36 @@ function toRust(parsed: ReturnType<typeof parseCurlCommand>): string {
 }
 
 // Generate Dart code
-function toDart(parsed: ReturnType<typeof parseCurlCommand>): string {
-    let code = "import 'package:http/http.dart' as http;\n\n";
+function toDart(data: RequestData): string {
+    let code = "import 'package:http/http.dart' as http;\n";
+    if (data.isBinary) {
+        code += "import 'dart:convert';\n";
+    }
+    code += '\n';
     code += 'void main() async {\n';
 
-    code += `    final response = await http.${parsed.method.toLowerCase()}(\n`;
-    code += `        Uri.parse('${parsed.url}'),\n`;
+    if (data.body && data.isBinary) {
+        code += `    final base64Body = '${data.body}';\n`;
+        code += '    final bodyBytes = base64.decode(base64Body);\n\n';
+    }
 
-    if (Object.keys(parsed.headers).length > 0) {
+    code += `    final response = await http.${data.method.toLowerCase()}(\n`;
+    code += `        Uri.parse('${data.url}'),\n`;
+
+    if (Object.keys(data.headers).length > 0) {
         code += '        headers: {\n';
-        for (const [key, value] of Object.entries(parsed.headers)) {
+        for (const [key, value] of Object.entries(data.headers)) {
             code += `            '${key}': '${value}',\n`;
         }
         code += '        },\n';
     }
 
-    if (parsed.data) {
-        code += `        body: '${parsed.data.replace(/'/g, "\\'")}',\n`;
+    if (data.body) {
+        if (data.isBinary) {
+            code += '        body: bodyBytes,\n';
+        } else {
+            code += `        body: '${data.body.replace(/'/g, "\\'")}',\n`;
+        }
     }
 
     code += '    );\n\n';
@@ -388,81 +609,11 @@ function toDart(parsed: ReturnType<typeof parseCurlCommand>): string {
     return code;
 }
 
-// Generate wget code
-function toWget(parsed: ReturnType<typeof parseCurlCommand>): string {
-    let cmd = `wget --method=${parsed.method}`;
+type GeneratorFn = (data: RequestData) => string;
 
-    for (const [key, value] of Object.entries(parsed.headers)) {
-        cmd += ` \\\n  --header='${key}: ${value}'`;
-    }
-
-    if (parsed.data) {
-        cmd += ` \\\n  --body-data='${parsed.data}'`;
-    }
-
-    cmd += ` \\\n  '${parsed.url}'`;
-
-    return cmd;
-}
-
-// Generate HTTPie code
-function toHttpie(parsed: ReturnType<typeof parseCurlCommand>): string {
-    let cmd = `http ${parsed.method} '${parsed.url}'`;
-
-    for (const [key, value] of Object.entries(parsed.headers)) {
-        cmd += ` \\\n  '${key}:${value}'`;
-    }
-
-    if (parsed.data) {
-        // For JSON data, try to parse and use HTTPie's syntax
-        try {
-            const jsonData = JSON.parse(parsed.data);
-            for (const [key, value] of Object.entries(jsonData)) {
-                cmd += ` \\\n  ${key}='${value}'`;
-            }
-        } catch {
-            // Not JSON, use raw body
-            cmd += ` \\\n  --raw='${parsed.data}'`;
-        }
-    }
-
-    return cmd;
-}
-
-// Generate PowerShell code
-function toPowershell(parsed: ReturnType<typeof parseCurlCommand>): string {
-    let code = '';
-
-    if (Object.keys(parsed.headers).length > 0) {
-        code += '$headers = @{\n';
-        for (const [key, value] of Object.entries(parsed.headers)) {
-            code += `    '${key}' = '${value}'\n`;
-        }
-        code += '}\n\n';
-    }
-
-    if (parsed.data) {
-        code += `$body = '${parsed.data.replace(/'/g, "''")}'\n\n`;
-    }
-
-    code += 'Invoke-RestMethod `\n';
-    code += `    -Uri '${parsed.url}' \`\n`;
-    code += `    -Method ${parsed.method}`;
-
-    if (Object.keys(parsed.headers).length > 0) {
-        code += ' `\n    -Headers $headers';
-    }
-
-    if (parsed.data) {
-        code += ' `\n    -Body $body';
-    }
-
-    return code;
-}
-
-const generators: Record<string, Record<string, (parsed: ReturnType<typeof parseCurlCommand>) => string>> = {
+const generators: Record<string, Record<string, GeneratorFn>> = {
     shell: {
-        curl: () => '', // Special case - return original command
+        curl: toCurl,
         wget: toWget,
         httpie: toHttpie,
         powershell: toPowershell,
@@ -503,30 +654,21 @@ const generators: Record<string, Record<string, (parsed: ReturnType<typeof parse
 
 export async function POST(request: NextRequest) {
     try {
-        const { curlCommand, language, variant }: RequestData = await request.json();
+        const requestData: RequestData = await request.json();
 
-        if (!curlCommand) {
-            return NextResponse.json({ error: 'curlCommand is required' }, { status: 400 });
-        }
-
-        // If language is shell/curl, just return the command
-        if (language === 'shell' && variant === 'curl') {
-            return NextResponse.json({ code: curlCommand });
-        }
-
-        const parsed = parseCurlCommand(curlCommand);
+        const { language, variant } = requestData;
 
         const langGenerators = generators[language];
         if (!langGenerators) {
-            return NextResponse.json({ code: curlCommand });
+            return NextResponse.json({ code: toCurl(requestData) });
         }
 
         const generator = langGenerators[variant] || langGenerators[''];
         if (!generator) {
-            return NextResponse.json({ code: curlCommand });
+            return NextResponse.json({ code: toCurl(requestData) });
         }
 
-        const code = generator(parsed);
+        const code = generator(requestData);
         return NextResponse.json({ code });
     } catch (error) {
         console.error('Code generation error:', error);
