@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import SubdomainTable from '@/components/SubdomainTable';
 import Navigation from '@/components/Navigation';
-import { SearchIcon, BoltIcon, AlertIcon, DownloadIcon, GithubIcon, WarningIcon } from '@/components/Icons';
+import { SearchIcon, BoltIcon, AlertIcon, DownloadIcon, WarningIcon } from '@/components/Icons';
 import styles from './page.module.css';
 
 interface ScanResult {
@@ -342,15 +342,6 @@ export default function Home() {
 
       {/* Footer */}
       <footer className={styles.footer}>
-        <a
-          href="https://github.com/pass-with-high-score/check-subdomain"
-          target="_blank"
-          rel="noopener noreferrer"
-          className={styles.githubLink}
-        >
-          <GithubIcon size={24} className={styles.githubIcon} />
-          GitHub
-        </a>
         <p>Built with Next.js • CT logs, VirusTotal, Shodan, Subfinder</p>
       </footer>
     </div>

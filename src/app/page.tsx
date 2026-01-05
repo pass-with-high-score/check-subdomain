@@ -4,6 +4,9 @@ import Link from 'next/link';
 import { SearchIcon, KeyIcon, ImageIcon, BoltIcon, ShieldIcon, SmartphoneIcon, GithubIcon } from '@/components/Icons';
 import styles from './page.module.css';
 
+// Note: metadata must be exported from a server component
+// For client components, we rely on the parent layout's metadata
+
 interface Tool {
     href: string;
     title: string;
