@@ -1,36 +1,122 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🔍 Subdomain Scanner
 
-## Getting Started
+A web-based subdomain enumeration tool that discovers subdomains via **Certificate Transparency logs**, resolves **DNS records**, and detects **Cloudflare protection**.
 
-First, run the development server:
+Built with **Next.js** and styled with **Neo-Brutalism** design.
+
+![Neo-Brutalism Design](https://img.shields.io/badge/Design-Neo--Brutalism-ff00ff?style=for-the-badge)
+![Next.js](https://img.shields.io/badge/Next.js-16-black?style=for-the-badge&logo=next.js)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?style=for-the-badge&logo=typescript)
+
+---
+
+## ✨ Features
+
+- **CT Logs Discovery** - Fetches subdomains from crt.sh Certificate Transparency logs
+- **DNS Resolution** - Resolves A records with 50 concurrent lookups
+- **Cloudflare Detection** - Identifies subdomains behind Cloudflare using IP CIDR matching
+- **Sortable & Filterable** - Sort by subdomain, IP, or Cloudflare status
+- **Export JSON** - Download complete scan results
+- **Copy to Clipboard** - One-click copy with toast notifications
+
+---
+
+## 🚀 Quick Start
 
 ```bash
+# Clone the repository
+git clone https://github.com/pass-with-high-score/check-subdomain.git
+cd check-subdomain
+
+# Install dependencies
+npm install
+
+# Start development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+
+# Open http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 📁 Project Structure
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+src/
+├── app/
+│   ├── api/scan/route.ts    # API endpoint
+│   ├── page.tsx             # Main page
+│   ├── page.module.css      # Page styles
+│   └── globals.css          # Global styles
+├── lib/
+│   ├── cloudflare.ts        # Cloudflare IP detection
+│   ├── crtsh.ts             # CT logs fetcher
+│   └── dns-resolver.ts      # DNS resolution
+└── components/
+    ├── SubdomainTable.tsx   # Results table
+    ├── Toast.tsx            # Toast notifications
+    └── *.module.css         # Component styles
+```
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## 🎨 Design
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+This project uses **Neo-Brutalism** design style:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- **Typography**: Lexend Mega (bold, chunky)
+- **Colors**: Neon Yellow, Pink, Cyan, Green, Orange
+- **Borders**: 4px thick black
+- **Shadows**: Hard 6-8px (no blur)
+- **Corners**: Sharp 0px (no border-radius)
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 🔧 API Usage
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### `POST /api/scan`
+
+**Request:**
+```json
+{
+  "domain": "example.com"
+}
+```
+
+**Response:**
+```json
+{
+  "scan_date": "2026-01-05 08:50:00",
+  "domain": "example.com",
+  "stats": {
+    "total": 87,
+    "cloudflare": 42,
+    "no_ip": 30
+  },
+  "subdomains": [
+    {
+      "subdomain": "www.example.com",
+      "ip": "104.16.1.1",
+      "cloudflare": true
+    }
+  ]
+}
+```
+
+---
+
+## 📜 License
+
+MIT License - feel free to use this project for any purpose.
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Feel free to open issues or submit pull requests.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request

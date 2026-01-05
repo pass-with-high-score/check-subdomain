@@ -309,6 +309,37 @@
     color: var(--text-muted);
     font-size: 0.9rem;
     font-weight: 600;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.githubLink {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    background: var(--neo-black);
+    border: 4px solid var(--neo-black);
+    box-shadow: 4px 4px 0px var(--neo-pink);
+    color: var(--neo-white);
+    font-family: 'Lexend Mega', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    text-transform: uppercase;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.githubLink:hover {
+    background: var(--neo-pink);
+    color: var(--neo-black);
+}
+
+.githubIcon {
+    width: 24px;
+    height: 24px;
 }
 
 /* Responsive */
