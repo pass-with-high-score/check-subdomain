@@ -46,34 +46,43 @@ export default function WebhookDetailPage({ params }: PageProps) {
         return field || {};
     };
 
-    const fetchRequests = useCallback(async () => {
-        try {
-            const response = await fetch(`/api/webhook?id=${id}`);
-            if (!response.ok) {
-                if (response.status === 404) {
-                    addToast('Endpoint not found', 'error');
+    // Connect to SSE stream for real-time updates
+    useEffect(() => {
+        const eventSource = new EventSource(`/api/webhook/${id}/stream`);
+
+        eventSource.onmessage = (event) => {
+            try {
+                const data = JSON.parse(event.data);
+
+                if (data.error) {
+                    addToast(data.error, 'error');
                     router.push('/webhook');
                     return;
                 }
-                throw new Error('Failed to fetch');
+
+                if (data.type === 'init') {
+                    // Initial load
+                    setRequests(data.requests || []);
+                    setLoading(false);
+                } else if (data.type === 'new') {
+                    // New requests - prepend to list
+                    setRequests((prev) => [...data.requests, ...prev]);
+                    addToast(`New ${data.requests.length === 1 ? 'request' : 'requests'} received`, 'success');
+                }
+            } catch (error) {
+                console.error('SSE parse error:', error);
             }
+        };
 
-            const data = await response.json();
-            setRequests(data.requests || []);
-        } catch (error) {
-            console.error(error);
-        } finally {
-            setLoading(false);
-        }
+        eventSource.onerror = () => {
+            // SSE connection error - will auto-reconnect
+            console.log('SSE connection error, reconnecting...');
+        };
+
+        return () => {
+            eventSource.close();
+        };
     }, [id, addToast, router]);
-
-    useEffect(() => {
-        fetchRequests();
-
-        // Poll for new requests every 3 seconds
-        const interval = setInterval(fetchRequests, 3000);
-        return () => clearInterval(interval);
-    }, [fetchRequests]);
 
     const copyUrl = async () => {
         await navigator.clipboard.writeText(webhookUrl);
@@ -126,9 +135,6 @@ export default function WebhookDetailPage({ params }: PageProps) {
                     />
                     <button onClick={copyUrl} className={styles.copyButton}>
                         {copied ? <CheckIcon size={18} /> : <CopyIcon size={18} />}
-                    </button>
-                    <button onClick={fetchRequests} className={styles.refreshButton}>
-                        <RefreshIcon size={18} />
                     </button>
                 </div>
             </header>
