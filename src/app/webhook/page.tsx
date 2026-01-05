@@ -4,104 +4,161 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Navigation from '@/components/Navigation';
 import Toast, { useToast } from '@/components/Toast';
-import { CopyIcon, CheckIcon, RefreshIcon, BoltIcon, LinkIcon, ServerIcon, InfoCircleIcon } from '@/components/Icons';
+import { CopyIcon, CheckIcon, BoltIcon, LinkIcon, ServerIcon, InfoCircleIcon, TrashIcon, PlusIcon } from '@/components/Icons';
 import styles from './page.module.css';
+
+const MAX_WEBHOOKS = 10;
+const STORAGE_KEY = 'webhook-endpoints';
 
 interface WebhookEndpoint {
     id: string;
+    name: string | null;
     url: string;
     created_at: string;
+    request_count?: number;
 }
 
 export default function WebhookPage() {
-    const [endpoint, setEndpoint] = useState<WebhookEndpoint | null>(null);
-    const [loading, setLoading] = useState(false);
-    const [copied, setCopied] = useState(false);
+    const [endpoints, setEndpoints] = useState<WebhookEndpoint[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [creating, setCreating] = useState(false);
+    const [copiedId, setCopiedId] = useState<string | null>(null);
     const { toasts, addToast, removeToast } = useToast();
     const router = useRouter();
 
-    // Verify stored endpoint exists in database, create new if not
-    const verifyAndCreateEndpoint = useCallback(async (storedEndpoint: WebhookEndpoint) => {
+    // Load and verify endpoints from localStorage
+    const loadEndpoints = useCallback(async () => {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (!stored) {
+            setLoading(false);
+            return;
+        }
+
         try {
-            // Check if endpoint still exists in database
-            const response = await fetch(`/api/webhook?id=${storedEndpoint.id}`);
+            const storedEndpoints = JSON.parse(stored) as WebhookEndpoint[];
+            if (!Array.isArray(storedEndpoints) || storedEndpoints.length === 0) {
+                setLoading(false);
+                return;
+            }
+
+            // Verify endpoints exist in database
+            const ids = storedEndpoints.map(e => e.id).join(',');
+            const response = await fetch(`/api/webhook?ids=${ids}`);
+
             if (response.ok) {
-                // Endpoint exists, use it
-                setEndpoint(storedEndpoint);
-            } else {
-                // Endpoint not found in DB, clear localStorage and create new
-                localStorage.removeItem('webhook-endpoint');
-                addToast('Previous endpoint expired, creating new one...', 'info');
+                const data = await response.json();
+                const validEndpoints: WebhookEndpoint[] = data.endpoints.map((e: {
+                    id: string;
+                    name: string | null;
+                    created_at: string;
+                    request_count: number;
+                }) => ({
+                    id: e.id,
+                    name: e.name,
+                    url: `${window.location.origin}/api/hook/${e.id}`,
+                    created_at: e.created_at,
+                    request_count: e.request_count,
+                }));
 
-                // Create new endpoint
-                const createResponse = await fetch('/api/webhook', { method: 'POST' });
-                if (createResponse.ok) {
-                    const data = await createResponse.json();
-                    const newEndpoint: WebhookEndpoint = {
-                        id: data.id,
-                        url: `${window.location.origin}/api/hook/${data.id}`,
-                        created_at: data.created_at,
-                    };
-                    setEndpoint(newEndpoint);
-                    localStorage.setItem('webhook-endpoint', JSON.stringify(newEndpoint));
-                    addToast('New webhook endpoint created', 'success');
+                // Update localStorage with only valid endpoints
+                if (validEndpoints.length !== storedEndpoints.length) {
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(validEndpoints));
+                    if (validEndpoints.length < storedEndpoints.length) {
+                        addToast('Some expired webhooks were removed', 'info');
+                    }
                 }
+
+                setEndpoints(validEndpoints);
             }
         } catch (error) {
-            console.error('Error verifying endpoint:', error);
-            localStorage.removeItem('webhook-endpoint');
-        }
-    }, [addToast]);
-
-    // Check for stored endpoint on mount
-    useEffect(() => {
-        const stored = localStorage.getItem('webhook-endpoint');
-        if (stored) {
-            try {
-                const storedEndpoint = JSON.parse(stored) as WebhookEndpoint;
-                verifyAndCreateEndpoint(storedEndpoint);
-            } catch {
-                localStorage.removeItem('webhook-endpoint');
-            }
-        }
-    }, [verifyAndCreateEndpoint]);
-
-    const createEndpoint = useCallback(async () => {
-        setLoading(true);
-        try {
-            const response = await fetch('/api/webhook', { method: 'POST' });
-            if (!response.ok) throw new Error('Failed to create endpoint');
-
-            const data = await response.json();
-            const newEndpoint: WebhookEndpoint = {
-                id: data.id,
-                url: `${window.location.origin}/api/hook/${data.id}`,
-                created_at: data.created_at,
-            };
-
-            setEndpoint(newEndpoint);
-            localStorage.setItem('webhook-endpoint', JSON.stringify(newEndpoint));
-            addToast('New webhook endpoint created', 'success');
-        } catch (error) {
-            console.error(error);
-            addToast('Failed to create endpoint', 'error');
+            console.error('Error loading endpoints:', error);
+            localStorage.removeItem(STORAGE_KEY);
         } finally {
             setLoading(false);
         }
     }, [addToast]);
 
-    const copyUrl = async () => {
-        if (!endpoint) return;
-        await navigator.clipboard.writeText(endpoint.url);
-        setCopied(true);
-        addToast('URL copied to clipboard', 'success');
-        setTimeout(() => setCopied(false), 2000);
+    useEffect(() => {
+        loadEndpoints();
+    }, [loadEndpoints]);
+
+    const createEndpoint = async () => {
+        if (endpoints.length >= MAX_WEBHOOKS) {
+            addToast(`Maximum ${MAX_WEBHOOKS} webhooks reached`, 'error');
+            return;
+        }
+
+        setCreating(true);
+        try {
+            const webhookNumber = endpoints.length + 1;
+            const response = await fetch('/api/webhook', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: `Webhook #${webhookNumber}` }),
+            });
+
+            if (!response.ok) throw new Error('Failed to create endpoint');
+
+            const data = await response.json();
+            const newEndpoint: WebhookEndpoint = {
+                id: data.id,
+                name: data.name,
+                url: `${window.location.origin}/api/hook/${data.id}`,
+                created_at: data.created_at,
+                request_count: 0,
+            };
+
+            const updatedEndpoints = [...endpoints, newEndpoint];
+            setEndpoints(updatedEndpoints);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedEndpoints));
+            addToast('Webhook created', 'success');
+        } catch (error) {
+            console.error(error);
+            addToast('Failed to create webhook', 'error');
+        } finally {
+            setCreating(false);
+        }
     };
 
-    const viewRequests = () => {
-        if (!endpoint) return;
-        router.push(`/webhook/${endpoint.id}`);
+    const deleteEndpoint = async (id: string) => {
+        try {
+            const response = await fetch(`/api/webhook/endpoint/${id}`, { method: 'DELETE' });
+            if (!response.ok) throw new Error('Failed to delete');
+
+            const updatedEndpoints = endpoints.filter(e => e.id !== id);
+            setEndpoints(updatedEndpoints);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedEndpoints));
+            addToast('Webhook deleted', 'success');
+        } catch (error) {
+            console.error(error);
+            addToast('Failed to delete webhook', 'error');
+        }
     };
+
+    const copyUrl = async (endpoint: WebhookEndpoint) => {
+        await navigator.clipboard.writeText(endpoint.url);
+        setCopiedId(endpoint.id);
+        addToast('URL copied', 'success');
+        setTimeout(() => setCopiedId(null), 2000);
+    };
+
+    const viewWebhook = (id: string) => {
+        router.push(`/webhook/${id}`);
+    };
+
+    const formatTime = (dateStr: string) => {
+        const date = new Date(dateStr.endsWith('Z') ? dateStr : dateStr + 'Z');
+        const now = new Date();
+        const diff = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+        if (diff < 60) return 'Just now';
+        if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+        if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+        if (diff < 604800) return `${Math.floor(diff / 86400)}d ago`;
+        return date.toLocaleDateString();
+    };
+
+    const canCreateMore = endpoints.length < MAX_WEBHOOKS;
 
     return (
         <div className={styles.container}>
@@ -118,39 +175,17 @@ export default function WebhookPage() {
                     <h1>Webhook Tester</h1>
                 </div>
                 <p className={styles.tagline}>
-                    Receive and inspect webhook requests in real-time
+                    {endpoints.length > 0
+                        ? `Manage your webhook endpoints (${endpoints.length}/${MAX_WEBHOOKS})`
+                        : 'Receive and inspect webhook requests in real-time'
+                    }
                 </p>
             </header>
 
             <main className={styles.main}>
-                {endpoint ? (
-                    <div className={styles.endpointCard}>
-                        <h2>Your Webhook URL</h2>
-                        <div className={styles.urlBox}>
-                            <input
-                                type="text"
-                                value={endpoint.url}
-                                readOnly
-                                className={styles.urlInput}
-                            />
-                            <button onClick={copyUrl} className={styles.copyButton}>
-                                {copied ? <CheckIcon size={20} /> : <CopyIcon size={20} />}
-                            </button>
-                        </div>
-                        <p className={styles.hint}>
-                            Send any HTTP request to this URL to capture it.
-                        </p>
-                        <div className={styles.actions}>
-                            <button onClick={viewRequests} className={styles.primaryButton}>
-                                View Requests
-                            </button>
-                            <button onClick={createEndpoint} className={styles.secondaryButton} disabled={loading}>
-                                <RefreshIcon size={18} />
-                                New URL
-                            </button>
-                        </div>
-                    </div>
-                ) : (
+                {loading ? (
+                    <div className={styles.loadingState}>Loading...</div>
+                ) : endpoints.length === 0 ? (
                     <div className={styles.emptyState}>
                         <BoltIcon size={64} />
                         <h2>Create a Webhook Endpoint</h2>
@@ -158,11 +193,70 @@ export default function WebhookPage() {
                         <button
                             onClick={createEndpoint}
                             className={styles.createButton}
-                            disabled={loading}
+                            disabled={creating}
                         >
-                            {loading ? 'Creating...' : 'Create Webhook URL'}
+                            {creating ? 'Creating...' : 'Create Webhook URL'}
                         </button>
                     </div>
+                ) : (
+                    <>
+                        <div className={styles.webhookGrid}>
+                            {endpoints.map((endpoint) => (
+                                <div key={endpoint.id} className={styles.webhookCard}>
+                                    <div className={styles.cardHeader}>
+                                        <h3>{endpoint.name || `Webhook`}</h3>
+                                        <button
+                                            onClick={() => deleteEndpoint(endpoint.id)}
+                                            className={styles.deleteButton}
+                                            title="Delete webhook"
+                                        >
+                                            <TrashIcon size={14} />
+                                        </button>
+                                    </div>
+                                    <div className={styles.cardMeta}>
+                                        <span>Created {formatTime(endpoint.created_at)}</span>
+                                        <span>{endpoint.request_count ?? 0} requests</span>
+                                    </div>
+                                    <div className={styles.cardUrl}>
+                                        <code>{endpoint.url}</code>
+                                    </div>
+                                    <div className={styles.cardActions}>
+                                        <button
+                                            onClick={() => viewWebhook(endpoint.id)}
+                                            className={styles.viewButton}
+                                        >
+                                            View Requests
+                                        </button>
+                                        <button
+                                            onClick={() => copyUrl(endpoint)}
+                                            className={styles.copyUrlButton}
+                                            title="Copy URL"
+                                        >
+                                            {copiedId === endpoint.id ? <CheckIcon size={16} /> : <CopyIcon size={16} />}
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+
+                            {/* Create New Card */}
+                            {canCreateMore && (
+                                <button
+                                    onClick={createEndpoint}
+                                    className={styles.createCard}
+                                    disabled={creating}
+                                >
+                                    <PlusIcon size={32} />
+                                    <span>{creating ? 'Creating...' : 'Create New Webhook'}</span>
+                                </button>
+                            )}
+                        </div>
+
+                        {!canCreateMore && (
+                            <p className={styles.limitMessage}>
+                                Maximum {MAX_WEBHOOKS} webhooks reached. Delete one to create more.
+                            </p>
+                        )}
+                    </>
                 )}
 
                 <div className={styles.features}>

@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Navigation from '@/components/Navigation';
 import Toast, { useToast } from '@/components/Toast';
-import { CopyIcon, CheckIcon, RefreshIcon, BoltIcon, TrashIcon, XIcon, AlertIcon, DownloadIcon } from '@/components/Icons';
+import { CopyIcon, CheckIcon, RefreshIcon, BoltIcon, TrashIcon, XIcon, AlertIcon, DownloadIcon, ArrowLeftIcon } from '@/components/Icons';
 import styles from './page.module.css';
 
 // Language definitions with their variants
@@ -526,6 +526,9 @@ export default function WebhookDetailPage({ params }: PageProps) {
 
             <header className={styles.header}>
                 <div className={styles.urlRow}>
+                    <button onClick={() => router.push('/webhook')} className={styles.backButton} title="Back to Webhooks">
+                        <ArrowLeftIcon size={20} />
+                    </button>
                     <input
                         type="text"
                         value={webhookUrl}

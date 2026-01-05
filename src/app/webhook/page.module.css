@@ -49,107 +49,20 @@
 }
 
 .main {
-    max-width: 700px;
+    max-width: 900px;
     margin: 0 auto;
     padding: 1rem 1.5rem 3rem;
 }
 
-/* Endpoint Card */
-.endpointCard {
+/* Loading State */
+.loadingState {
     background: var(--neo-white);
     border: 4px solid var(--neo-black);
     box-shadow: 8px 8px 0px var(--neo-black);
-    padding: 2rem;
+    padding: 3rem 2rem;
     text-align: center;
-}
-
-.endpointCard h2 {
     font-family: 'Lexend Mega', sans-serif;
-    font-size: 1rem;
     text-transform: uppercase;
-    margin-bottom: 1rem;
-}
-
-.urlBox {
-    display: flex;
-    gap: 0;
-    margin-bottom: 0.75rem;
-}
-
-.urlInput {
-    flex: 1;
-    padding: 1rem;
-    border: 3px solid var(--neo-black);
-    font-family: 'Geist Mono', monospace;
-    font-size: 0.9rem;
-    background: #f8f8f8;
-}
-
-.copyButton {
-    padding: 1rem;
-    background: var(--neo-yellow);
-    border: 3px solid var(--neo-black);
-    border-left: none;
-    cursor: pointer;
-    transition: background-color 0.15s ease;
-}
-
-.copyButton:hover {
-    background: var(--neo-green);
-}
-
-.hint {
-    color: var(--text-muted);
-    font-size: 0.85rem;
-    margin-bottom: 1.5rem;
-}
-
-.actions {
-    display: flex;
-    gap: 1rem;
-    justify-content: center;
-}
-
-.primaryButton {
-    padding: 0.875rem 2rem;
-    background: var(--neo-black);
-    color: var(--neo-white);
-    border: 3px solid var(--neo-black);
-    font-family: 'Lexend Mega', sans-serif;
-    font-weight: 700;
-    font-size: 0.85rem;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: all 0.15s ease;
-}
-
-.primaryButton:hover {
-    background: var(--neo-green);
-    color: var(--neo-black);
-}
-
-.secondaryButton {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.875rem 1.5rem;
-    background: var(--neo-white);
-    border: 3px solid var(--neo-black);
-    font-family: 'Lexend Mega', sans-serif;
-    font-weight: 700;
-    font-size: 0.85rem;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: all 0.15s ease;
-}
-
-.secondaryButton:hover {
-    background: var(--neo-yellow);
-}
-
-.secondaryButton:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
 }
 
 /* Empty State */
@@ -201,6 +114,169 @@
     cursor: not-allowed;
 }
 
+/* Webhook Grid */
+.webhookGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 1rem;
+}
+
+/* Webhook Card */
+.webhookCard {
+    background: var(--neo-white);
+    border: 4px solid var(--neo-black);
+    box-shadow: 6px 6px 0px var(--neo-black);
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    transition: all 0.15s ease;
+}
+
+.webhookCard:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 8px 8px 0px var(--neo-black);
+}
+
+.cardHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 0.5rem;
+}
+
+.cardHeader h3 {
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    word-break: break-word;
+}
+
+.deleteButton {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--neo-white);
+    border: 2px solid var(--neo-black);
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.deleteButton:hover {
+    background: #ff4444;
+    color: white;
+}
+
+.cardMeta {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.cardUrl {
+    background: #f5f5f5;
+    border: 2px solid var(--neo-black);
+    padding: 0.5rem;
+    overflow: hidden;
+}
+
+.cardUrl code {
+    font-family: 'Geist Mono', monospace;
+    font-size: 0.7rem;
+    word-break: break-all;
+    display: block;
+}
+
+.cardActions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: auto;
+}
+
+.viewButton {
+    flex: 1;
+    padding: 0.625rem 1rem;
+    background: var(--neo-black);
+    color: var(--neo-white);
+    border: 3px solid var(--neo-black);
+    font-family: 'Lexend Mega', sans-serif;
+    font-weight: 700;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.viewButton:hover {
+    background: var(--neo-green);
+    color: var(--neo-black);
+}
+
+.copyUrlButton {
+    width: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--neo-yellow);
+    border: 3px solid var(--neo-black);
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.copyUrlButton:hover {
+    background: var(--neo-green);
+}
+
+/* Create Card */
+.createCard {
+    background: var(--neo-white);
+    border: 4px dashed var(--neo-black);
+    padding: 2rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    min-height: 180px;
+}
+
+.createCard:hover {
+    background: var(--neo-yellow);
+    border-style: solid;
+    box-shadow: 6px 6px 0px var(--neo-black);
+}
+
+.createCard:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.createCard span {
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    text-align: center;
+}
+
+/* Limit Message */
+.limitMessage {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    padding: 0.5rem;
+    background: #fff3cd;
+    border: 2px solid var(--neo-black);
+}
+
 /* Features */
 .features {
     display: grid;
@@ -245,11 +321,12 @@
         grid-template-columns: 1fr;
     }
 
-    .actions {
-        flex-direction: column;
+    .webhookGrid {
+        grid-template-columns: 1fr;
     }
 
-    .urlInput {
-        font-size: 0.75rem;
+    .cardMeta {
+        flex-direction: column;
+        gap: 0.25rem;
     }
 }

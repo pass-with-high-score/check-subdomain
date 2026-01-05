@@ -22,17 +22,28 @@ async function ensureInitialized() {
 }
 
 // POST: Create new webhook endpoint
-export async function POST() {
+export async function POST(request: NextRequest) {
     try {
         await ensureInitialized();
 
+        // Parse optional name from body
+        let name: string | null = null;
+        try {
+            const body = await request.json();
+            name = body?.name || null;
+        } catch {
+            // No body or invalid JSON, proceed without name
+        }
+
         const [endpoint] = await sql`
-      INSERT INTO webhook_endpoints DEFAULT VALUES
-      RETURNING id, created_at
+      INSERT INTO webhook_endpoints (name)
+      VALUES (${name})
+      RETURNING id, name, created_at
     `;
 
         return NextResponse.json({
             id: endpoint.id,
+            name: endpoint.name,
             url: `/api/hook/${endpoint.id}`,
             created_at: endpoint.created_at,
         });
@@ -45,18 +56,43 @@ export async function POST() {
     }
 }
 
-// GET: List recent endpoints (for debugging, optional)
+// GET: Get endpoint(s) by ID(s)
 export async function GET(request: NextRequest) {
     try {
         await ensureInitialized();
 
         const searchParams = request.nextUrl.searchParams;
         const endpointId = searchParams.get('id');
+        const ids = searchParams.get('ids'); // Comma-separated IDs for batch query
+
+        // Batch query for multiple endpoints
+        if (ids) {
+            const idArray = ids.split(',').filter(id => id.trim());
+            if (idArray.length === 0) {
+                return NextResponse.json({ endpoints: [] });
+            }
+
+            // Get endpoints with request counts
+            const endpoints = await sql`
+                SELECT 
+                    e.id, 
+                    e.name, 
+                    e.created_at, 
+                    e.last_activity,
+                    COUNT(r.id)::int as request_count
+                FROM webhook_endpoints e
+                LEFT JOIN webhook_requests r ON r.endpoint_id = e.id
+                WHERE e.id = ANY(${idArray}::uuid[])
+                GROUP BY e.id, e.name, e.created_at, e.last_activity
+            `;
+
+            return NextResponse.json({ endpoints });
+        }
 
         if (endpointId) {
             // Get specific endpoint with its requests
             const [endpoint] = await sql`
-        SELECT id, created_at, last_activity 
+        SELECT id, name, created_at, last_activity 
         FROM webhook_endpoints 
         WHERE id = ${endpointId}::uuid
       `;

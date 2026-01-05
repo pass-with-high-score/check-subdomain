@@ -21,6 +21,22 @@
     gap: 0;
 }
 
+.backButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 1rem;
+    background: var(--neo-white);
+    border: 3px solid var(--neo-black);
+    border-right: none;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.backButton:hover {
+    background: var(--neo-yellow);
+}
+
 .urlInput {
     flex: 1;
     padding: 0.875rem 1rem;
