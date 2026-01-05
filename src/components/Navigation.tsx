@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { SearchIcon, KeyIcon } from './Icons';
+import { SearchIcon, KeyIcon, ImageIcon } from './Icons';
 import styles from './Navigation.module.css';
 
 interface NavItem {
@@ -12,8 +12,9 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-    { href: '/', label: 'Subdomain Scanner', icon: <SearchIcon size={18} /> },
-    { href: '/otp', label: 'OTP Generator', icon: <KeyIcon size={18} /> },
+    { href: '/', label: 'Subdomain', icon: <SearchIcon size={18} /> },
+    { href: '/otp', label: 'OTP', icon: <KeyIcon size={18} /> },
+    { href: '/base64', label: 'Base64', icon: <ImageIcon size={18} /> },
 ];
 
 export default function Navigation() {

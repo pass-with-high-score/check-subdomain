@@ -1,0 +1,426 @@
+/* Base64 Image Viewer - Neobrutalism Style */
+
+.container {
+    min-height: 100vh;
+    position: relative;
+    padding: 2rem;
+}
+
+.backgroundGradient {
+    position: fixed;
+    inset: 0;
+    background:
+        linear-gradient(135deg, #FFFEF0 0%, #FFF8DC 100%);
+    z-index: -1;
+}
+
+/* Header */
+.header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.logoIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 60px;
+    height: 60px;
+    background: var(--neo-pink);
+    border: 4px solid var(--neo-black);
+    box-shadow: 6px 6px 0px var(--neo-black);
+}
+
+.header h1 {
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 2.5rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: -0.03em;
+    text-shadow: 4px 4px 0px var(--neo-pink);
+}
+
+.tagline {
+    color: var(--text-muted);
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+/* Tab Navigation */
+.tabContainer {
+    display: flex;
+    justify-content: center;
+    gap: 0;
+    margin-bottom: 2rem;
+    max-width: 500px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.tab {
+    flex: 1;
+    padding: 1rem 2rem;
+    background: var(--neo-white);
+    border: 4px solid var(--neo-black);
+    font-family: 'Lexend Mega', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.tab:first-child {
+    border-right: 2px solid var(--neo-black);
+}
+
+.tab:last-child {
+    border-left: 2px solid var(--neo-black);
+}
+
+.tab:hover {
+    background: var(--neo-yellow);
+}
+
+.tabActive {
+    background: var(--neo-cyan);
+    box-shadow: 4px 4px 0px var(--neo-black);
+    transform: translate(-2px, -2px);
+}
+
+/* Main Content */
+.main {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* View Layout - Two columns */
+.viewLayout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+}
+
+.encodeLayout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+}
+
+/* Sections */
+.previewSection,
+.inputSection,
+.uploadSection,
+.outputSection {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.previewSection h3,
+.inputSection h3,
+.uploadSection h3,
+.outputSection h3 {
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 1rem;
+    text-transform: uppercase;
+    margin: 0;
+}
+
+/* Preview Box */
+.previewBox {
+    min-height: 400px;
+    background: var(--neo-white);
+    border: 4px solid var(--neo-black);
+    box-shadow: 8px 8px 0px var(--neo-black);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.previewImage {
+    max-width: 100%;
+    max-height: 400px;
+    object-fit: contain;
+}
+
+.previewPlaceholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    color: var(--text-muted);
+    padding: 2rem;
+    text-align: center;
+}
+
+/* Input Header */
+.inputHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Textarea */
+.textarea {
+    width: 100%;
+    min-height: 400px;
+    padding: 1rem;
+    background: var(--neo-white);
+    border: 4px solid var(--neo-black);
+    box-shadow: 8px 8px 0px var(--neo-black);
+    font-family: 'JetBrains Mono', 'Consolas', monospace;
+    font-size: 0.85rem;
+    resize: vertical;
+    line-height: 1.5;
+}
+
+.textarea:focus {
+    outline: none;
+    box-shadow: 8px 8px 0px var(--neo-cyan);
+}
+
+.textarea::placeholder {
+    color: #999;
+}
+
+.hint {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+/* Drop Zone */
+.dropZone {
+    min-height: 300px;
+    background: var(--neo-white);
+    border: 4px dashed var(--neo-black);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.dropZone:hover {
+    background: var(--neo-yellow);
+    border-style: solid;
+}
+
+.dropZoneActive {
+    background: var(--neo-green);
+    border-style: solid;
+    box-shadow: 8px 8px 0px var(--neo-black);
+}
+
+.hiddenInput {
+    display: none;
+}
+
+.dropText {
+    font-family: 'Lexend Mega', sans-serif;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 1rem;
+    margin: 0;
+}
+
+.dropSubtext {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+/* File Info */
+.fileInfo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    background: var(--neo-green);
+    border: 3px solid var(--neo-black);
+}
+
+/* Buttons */
+.actionButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 1rem 1.5rem;
+    background: var(--neo-green);
+    border: 4px solid var(--neo-black);
+    box-shadow: 6px 6px 0px var(--neo-black);
+    font-family: 'Lexend Mega', sans-serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.1s ease;
+}
+
+.actionButton:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 8px 8px 0px var(--neo-black);
+}
+
+.actionButton:active {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0px var(--neo-black);
+}
+
+.clearButton {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.5rem 0.75rem;
+    background: transparent;
+    border: 2px solid var(--neo-black);
+    font-family: 'Lexend Mega', sans-serif;
+    font-weight: 600;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.clearButton:hover:not(:disabled) {
+    background: var(--neo-red);
+    color: var(--neo-white);
+}
+
+.clearButton:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.smallButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    background: transparent;
+    border: 2px solid var(--neo-black);
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.smallButton:hover {
+    background: var(--neo-red);
+    color: var(--neo-white);
+}
+
+.actionButtons {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.smallActionButton {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.5rem 0.75rem;
+    background: var(--neo-cyan);
+    border: 3px solid var(--neo-black);
+    box-shadow: 3px 3px 0px var(--neo-black);
+    font-family: 'Lexend Mega', sans-serif;
+    font-weight: 600;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.1s ease;
+}
+
+.smallActionButton:hover:not(:disabled) {
+    transform: translate(-1px, -1px);
+    box-shadow: 4px 4px 0px var(--neo-black);
+}
+
+.smallActionButton:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* Footer */
+.footer {
+    margin-top: 3rem;
+    text-align: center;
+    padding-bottom: 2rem;
+}
+
+.githubLink {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    background: var(--neo-black);
+    color: var(--neo-white);
+    border: 4px solid var(--neo-black);
+    font-family: 'Lexend Mega', sans-serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    transition: all 0.15s ease;
+}
+
+.githubLink:hover {
+    background: var(--neo-white);
+    color: var(--neo-black);
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+
+    .viewLayout,
+    .encodeLayout {
+        grid-template-columns: 1fr;
+    }
+
+    .previewBox {
+        min-height: 300px;
+    }
+
+    .textarea {
+        min-height: 300px;
+    }
+}
+
+@media (max-width: 600px) {
+    .container {
+        padding: 1rem;
+    }
+
+    .header h1 {
+        font-size: 1.5rem;
+    }
+
+    .logoIcon {
+        width: 48px;
+        height: 48px;
+    }
+
+    .tab {
+        padding: 0.75rem 1rem;
+        font-size: 0.75rem;
+    }
+
+    .previewBox,
+    .textarea {
+        min-height: 250px;
+    }
+
+    .dropZone {
+        min-height: 200px;
+    }
+}
