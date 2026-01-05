@@ -58,10 +58,12 @@ export default function WebhookDetailPage({ params }: PageProps) {
     const [selectedLanguage, setSelectedLanguage] = useState<LanguageKey>('shell');
     const [selectedVariant, setSelectedVariant] = useState<string>('curl');
     const [codeCopied, setCodeCopied] = useState(false);
+    const [webhookUrl, setWebhookUrl] = useState(`/api/hook/${id}`);
 
-    const webhookUrl = typeof window !== 'undefined'
-        ? `${window.location.origin}/api/hook/${id}`
-        : `/api/hook/${id}`;
+    // Set the full URL on client side to avoid hydration mismatch
+    useEffect(() => {
+        setWebhookUrl(`${window.location.origin}/api/hook/${id}`);
+    }, [id]);
 
     // Helper to parse JSON fields that might be strings
     const parseJsonField = (field: Record<string, string> | string): Record<string, string> => {

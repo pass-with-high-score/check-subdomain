@@ -89,24 +89,27 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: siteConfig.name,
+    description: siteConfig.description,
+    url: siteConfig.url,
+    potentialAction: {
+      "@type": "SearchAction",
+      target: `${siteConfig.url}/check-subdomain?q={search_term_string}`,
+      "query-input": "required name=search_term_string",
+    },
+  };
+
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
         <script
           type="application/ld+json"
+          suppressHydrationWarning
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "WebSite",
-              name: siteConfig.name,
-              description: siteConfig.description,
-              url: siteConfig.url,
-              potentialAction: {
-                "@type": "SearchAction",
-                target: `${siteConfig.url}/check-subdomain?q={search_term_string}`,
-                "query-input": "required name=search_term_string",
-              },
-            }),
+            __html: JSON.stringify(jsonLd),
           }}
         />
       </head>
