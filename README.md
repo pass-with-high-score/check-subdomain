@@ -1,122 +1,106 @@
-# 🔍 Subdomain Scanner
+# Subdomain Scanner
 
-A web-based subdomain enumeration tool that discovers subdomains via **Certificate Transparency logs**, resolves **DNS records**, and detects **Cloudflare protection**.
+A comprehensive subdomain enumeration tool that aggregates data from multiple sources to discover, resolve, and analyze subdomains.
 
-Built with **Next.js** and styled with **Neo-Brutalism** design.
+## Features
 
-![Neo-Brutalism Design](https://img.shields.io/badge/Design-Neo--Brutalism-ff00ff?style=for-the-badge)
-![Next.js](https://img.shields.io/badge/Next.js-16-black?style=for-the-badge&logo=next.js)
-![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?style=for-the-badge&logo=typescript)
+- **Multi-Source Discovery**
+  - **Certificate Transparency Logs**: Fetches historical data from crt.sh
+  - **VirusTotal**: Passive DNS lookup (API key integration)
+  - **Shodan**: Subdomain discovery and host information
+  - **Subfinder**: Integration with ProjectDiscovery's CLI tool
+- **Deep Analysis**
+  - **DNS Resolution**: High-concurrency A record resolution
+  - **Cloudflare Detection**: Identifies protection status via IP CIDR
+  - **Port Scanning**: Passive port detection via Shodan
+- **Professional UI**
+  - **Neo-Brutalism Design**: High-contrast, bold aesthetics
+  - **Interactive Table**: Sortable, filterable columns
+  - **Export Capabilities**: JSON export for external processing
 
----
+## Quick Start
 
-## ✨ Features
+### Prerequisites
 
-- **CT Logs Discovery** - Fetches subdomains from crt.sh Certificate Transparency logs
-- **DNS Resolution** - Resolves A records with 50 concurrent lookups
-- **Cloudflare Detection** - Identifies subdomains behind Cloudflare using IP CIDR matching
-- **Sortable & Filterable** - Sort by subdomain, IP, or Cloudflare status
-- **Export JSON** - Download complete scan results
-- **Copy to Clipboard** - One-click copy with toast notifications
+- Node.js 18+
+- Go (optional, for Subfinder)
 
----
-
-## 🚀 Quick Start
+### Installation
 
 ```bash
-# Clone the repository
 git clone https://github.com/pass-with-high-score/check-subdomain.git
 cd check-subdomain
-
-# Install dependencies
 npm install
+```
 
-# Start development server
+### Setup Subfinder (Optional)
+
+To enable the Subfinder integration, install the CLI tool:
+
+```bash
+# Using Go (Recommended)
+go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest
+
+# Using Homebrew (macOS)
+brew install subfinder
+```
+
+### Running the Application
+
+```bash
 npm run dev
-
-# Open http://localhost:3000
+# Server starting at http://localhost:3000
 ```
 
----
+## API Configuration
 
-## 📁 Project Structure
+To unlock full capabilities, configure your API keys in the UI Settings panel:
 
-```
-src/
-├── app/
-│   ├── api/scan/route.ts    # API endpoint
-│   ├── page.tsx             # Main page
-│   ├── page.module.css      # Page styles
-│   └── globals.css          # Global styles
-├── lib/
-│   ├── cloudflare.ts        # Cloudflare IP detection
-│   ├── crtsh.ts             # CT logs fetcher
-│   └── dns-resolver.ts      # DNS resolution
-└── components/
-    ├── SubdomainTable.tsx   # Results table
-    ├── Toast.tsx            # Toast notifications
-    └── *.module.css         # Component styles
-```
+1. **VirusTotal Key**: Get free key from [virustotal.com](https://www.virustotal.com/)
+2. **Shodan Key**: Get free key from [shodan.io](https://shodan.io/)
 
----
+The application works fully without keys, relying on CT logs and Subfinder (if installed).
 
-## 🎨 Design
+## API Reference
 
-This project uses **Neo-Brutalism** design style:
+### Endpoint: `POST /api/scan`
 
-- **Typography**: Lexend Mega (bold, chunky)
-- **Colors**: Neon Yellow, Pink, Cyan, Green, Orange
-- **Borders**: 4px thick black
-- **Shadows**: Hard 6-8px (no blur)
-- **Corners**: Sharp 0px (no border-radius)
-
----
-
-## 🔧 API Usage
-
-### `POST /api/scan`
-
-**Request:**
+**Request Body**
 ```json
 {
-  "domain": "example.com"
+  "domain": "example.com",
+  "virustotalApiKey": "optional_key",
+  "shodanApiKey": "optional_key",
+  "enableSubfinder": true
 }
 ```
 
-**Response:**
+**Response**
 ```json
 {
-  "scan_date": "2026-01-05 08:50:00",
+  "scan_date": "2026-01-05 10:00:00",
   "domain": "example.com",
   "stats": {
-    "total": 87,
-    "cloudflare": 42,
-    "no_ip": 30
+    "total": 150,
+    "cloudflare": 45,
+    "sources": {
+      "crtsh": 120,
+      "virustotal": 80,
+      "subfinder": 100
+    }
   },
   "subdomains": [
     {
-      "subdomain": "www.example.com",
-      "ip": "104.16.1.1",
-      "cloudflare": true
+      "subdomain": "admin.example.com",
+      "ip": "1.2.3.4",
+      "cloudflare": false,
+      "ports": [80, 443],
+      "source": ["crtsh", "virustotal"]
     }
   ]
 }
 ```
 
----
+## License
 
-## 📜 License
-
-MIT License - feel free to use this project for any purpose.
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome! Feel free to open issues or submit pull requests.
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+MIT License
