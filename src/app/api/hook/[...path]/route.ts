@@ -13,9 +13,11 @@ async function handleWebhook(request: NextRequest, { params }: RouteParams) {
     const pathParams = path.slice(1);
 
     try {
-        // Verify endpoint exists
+        // Verify endpoint exists and get test options
         const [endpoint] = await sql`
-      SELECT id FROM webhook_endpoints WHERE id = ${endpointId}::uuid
+      SELECT id, response_delay_ms, response_status_code 
+      FROM webhook_endpoints 
+      WHERE id = ${endpointId}::uuid
     `;
 
         if (!endpoint) {
@@ -81,11 +83,22 @@ async function handleWebhook(request: NextRequest, { params }: RouteParams) {
       WHERE id = ${endpointId}::uuid
     `;
 
-        return NextResponse.json({
-            success: true,
-            request_id: newRequest.id,
-            message: 'Webhook received',
-        });
+        // Apply response delay if configured
+        const delayMs = endpoint.response_delay_ms || 0;
+        if (delayMs > 0) {
+            await new Promise(resolve => setTimeout(resolve, delayMs));
+        }
+
+        // Return with configured status code
+        const statusCode = endpoint.response_status_code || 200;
+        return NextResponse.json(
+            {
+                success: statusCode >= 200 && statusCode < 300,
+                request_id: newRequest.id,
+                message: 'Webhook received',
+            },
+            { status: statusCode }
+        );
     } catch (error) {
         console.error('Failed to process webhook:', error);
         return NextResponse.json(

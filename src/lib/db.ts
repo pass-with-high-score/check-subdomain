@@ -19,7 +19,9 @@ export async function initDatabase() {
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       name VARCHAR(100),
       created_at TIMESTAMPTZ DEFAULT NOW(),
-      last_activity TIMESTAMPTZ DEFAULT NOW()
+      last_activity TIMESTAMPTZ DEFAULT NOW(),
+      response_delay_ms INTEGER DEFAULT 0,
+      response_status_code INTEGER DEFAULT 200
     )
   `;
 
@@ -32,6 +34,25 @@ export async function initDatabase() {
         WHERE table_name = 'webhook_endpoints' AND column_name = 'name'
       ) THEN
         ALTER TABLE webhook_endpoints ADD COLUMN name VARCHAR(100);
+      END IF;
+    END $$;
+  `;
+
+  // Add test options columns if they don't exist (migration for existing tables)
+  await sql`
+    DO $$
+    BEGIN
+      IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'webhook_endpoints' AND column_name = 'response_delay_ms'
+      ) THEN
+        ALTER TABLE webhook_endpoints ADD COLUMN response_delay_ms INTEGER DEFAULT 0;
+      END IF;
+      IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'webhook_endpoints' AND column_name = 'response_status_code'
+      ) THEN
+        ALTER TABLE webhook_endpoints ADD COLUMN response_status_code INTEGER DEFAULT 200;
       END IF;
     END $$;
   `;

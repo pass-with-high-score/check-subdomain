@@ -79,11 +79,13 @@ export async function GET(request: NextRequest) {
                     e.name, 
                     e.created_at, 
                     e.last_activity,
+                    e.response_delay_ms,
+                    e.response_status_code,
                     COUNT(r.id)::int as request_count
                 FROM webhook_endpoints e
                 LEFT JOIN webhook_requests r ON r.endpoint_id = e.id
                 WHERE e.id = ANY(${idArray}::uuid[])
-                GROUP BY e.id, e.name, e.created_at, e.last_activity
+                GROUP BY e.id, e.name, e.created_at, e.last_activity, e.response_delay_ms, e.response_status_code
             `;
 
             return NextResponse.json({ endpoints });

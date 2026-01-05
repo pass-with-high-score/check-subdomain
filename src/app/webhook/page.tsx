@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Navigation from '@/components/Navigation';
 import Toast, { useToast } from '@/components/Toast';
-import { CopyIcon, CheckIcon, BoltIcon, LinkIcon, ServerIcon, InfoCircleIcon, TrashIcon, PlusIcon, PencilIcon } from '@/components/Icons';
+import { CopyIcon, CheckIcon, BoltIcon, LinkIcon, ServerIcon, InfoCircleIcon, TrashIcon, PlusIcon, PencilIcon, SettingsIcon, ClockIcon, AlertCircleIcon } from '@/components/Icons';
 import styles from './page.module.css';
 
 const MAX_WEBHOOKS = 10;
@@ -16,7 +16,23 @@ interface WebhookEndpoint {
     url: string;
     created_at: string;
     request_count?: number;
+    response_delay_ms?: number;
+    response_status_code?: number;
 }
+
+const STATUS_CODE_OPTIONS = [
+    { value: 200, label: '200 - OK', category: 'success' },
+    { value: 201, label: '201 - Created', category: 'success' },
+    { value: 400, label: '400 - Bad Request', category: 'error' },
+    { value: 401, label: '401 - Unauthorized', category: 'error' },
+    { value: 403, label: '403 - Forbidden', category: 'error' },
+    { value: 404, label: '404 - Not Found', category: 'error' },
+    { value: 429, label: '429 - Too Many Requests', category: 'error' },
+    { value: 500, label: '500 - Internal Server Error', category: 'error' },
+    { value: 502, label: '502 - Bad Gateway', category: 'error' },
+    { value: 503, label: '503 - Service Unavailable', category: 'error' },
+    { value: 504, label: '504 - Gateway Timeout', category: 'error' },
+];
 
 export default function WebhookPage() {
     const [endpoints, setEndpoints] = useState<WebhookEndpoint[]>([]);
@@ -27,6 +43,12 @@ export default function WebhookPage() {
     const [showNameDialog, setShowNameDialog] = useState(false);
     const [editingWebhook, setEditingWebhook] = useState<WebhookEndpoint | null>(null);
     const [nameInput, setNameInput] = useState('');
+    // Test Options Dialog State
+    const [showTestOptionsDialog, setShowTestOptionsDialog] = useState(false);
+    const [editingTestOptions, setEditingTestOptions] = useState<WebhookEndpoint | null>(null);
+    const [delayInput, setDelayInput] = useState(0);
+    const [statusCodeInput, setStatusCodeInput] = useState(200);
+    const [savingTestOptions, setSavingTestOptions] = useState(false);
     const { toasts, addToast, removeToast } = useToast();
     const router = useRouter();
 
@@ -56,12 +78,16 @@ export default function WebhookPage() {
                     name: string | null;
                     created_at: string;
                     request_count: number;
+                    response_delay_ms?: number;
+                    response_status_code?: number;
                 }) => ({
                     id: e.id,
                     name: e.name,
                     url: `${window.location.origin}/api/hook/${e.id}`,
                     created_at: e.created_at,
                     request_count: e.request_count,
+                    response_delay_ms: e.response_delay_ms || 0,
+                    response_status_code: e.response_status_code || 200,
                 }));
 
                 // Update localStorage with only valid endpoints
@@ -213,6 +239,52 @@ export default function WebhookPage() {
         return date.toLocaleDateString();
     };
 
+    // Test Options Handlers
+    const openTestOptionsDialog = (webhook: WebhookEndpoint) => {
+        setEditingTestOptions(webhook);
+        setDelayInput(webhook.response_delay_ms || 0);
+        setStatusCodeInput(webhook.response_status_code || 200);
+        setShowTestOptionsDialog(true);
+    };
+
+    const handleTestOptionsSubmit = async () => {
+        if (!editingTestOptions) return;
+
+        setSavingTestOptions(true);
+        try {
+            const response = await fetch(`/api/webhook/endpoint/${editingTestOptions.id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    response_delay_ms: delayInput,
+                    response_status_code: statusCodeInput,
+                }),
+            });
+
+            if (!response.ok) throw new Error('Failed to update test options');
+
+            const updatedEndpoints = endpoints.map(e =>
+                e.id === editingTestOptions.id
+                    ? { ...e, response_delay_ms: delayInput, response_status_code: statusCodeInput }
+                    : e
+            );
+            setEndpoints(updatedEndpoints);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedEndpoints));
+            addToast('Test options updated', 'success');
+            setShowTestOptionsDialog(false);
+        } catch (error) {
+            console.error(error);
+            addToast('Failed to update test options', 'error');
+        } finally {
+            setSavingTestOptions(false);
+        }
+    };
+
+    const hasActiveTestOptions = (endpoint: WebhookEndpoint) => {
+        return (endpoint.response_delay_ms && endpoint.response_delay_ms > 0) ||
+            (endpoint.response_status_code && endpoint.response_status_code !== 200);
+    };
+
     const canCreateMore = endpoints.length < MAX_WEBHOOKS;
 
     return (
@@ -284,6 +356,38 @@ export default function WebhookPage() {
                                     <div className={styles.cardUrl}>
                                         <code>{endpoint.url}</code>
                                     </div>
+
+                                    {/* Test Options Row */}
+                                    <div className={styles.testOptionsRow}>
+                                        <button
+                                            onClick={() => openTestOptionsDialog(endpoint)}
+                                            className={`${styles.testOptionsButton} ${hasActiveTestOptions(endpoint) ? styles.testOptionsActive : ''}`}
+                                            title="Configure test options"
+                                        >
+                                            <SettingsIcon size={14} />
+                                            <span>Test Options</span>
+                                        </button>
+                                        {hasActiveTestOptions(endpoint) && (
+                                            <div className={styles.testOptionsBadges}>
+                                                {endpoint.response_delay_ms && endpoint.response_delay_ms > 0 && (
+                                                    <span className={styles.delayBadge}>
+                                                        <ClockIcon size={12} />
+                                                        {endpoint.response_delay_ms >= 1000
+                                                            ? `${(endpoint.response_delay_ms / 1000).toFixed(1)}s`
+                                                            : `${endpoint.response_delay_ms}ms`
+                                                        }
+                                                    </span>
+                                                )}
+                                                {endpoint.response_status_code && endpoint.response_status_code !== 200 && (
+                                                    <span className={`${styles.statusBadge} ${endpoint.response_status_code >= 400 ? styles.statusError : ''}`}>
+                                                        <AlertCircleIcon size={12} />
+                                                        {endpoint.response_status_code}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+
                                     <div className={styles.cardActions}>
                                         <button
                                             onClick={() => viewWebhook(endpoint.id)}
@@ -377,6 +481,85 @@ export default function WebhookPage() {
                                 className={styles.confirmButton}
                             >
                                 {editingWebhook ? 'Save' : 'Create'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Test Options Dialog */}
+            {showTestOptionsDialog && editingTestOptions && (
+                <div className={styles.dialogOverlay} onClick={() => setShowTestOptionsDialog(false)}>
+                    <div className={styles.testOptionsDialog} onClick={e => e.stopPropagation()}>
+                        <h3>
+                            <SettingsIcon size={20} />
+                            Test Options
+                        </h3>
+                        <p className={styles.dialogSubtitle}>
+                            Configure how this webhook responds to requests
+                        </p>
+
+                        <div className={styles.testOptionSection}>
+                            <div className={styles.testOptionHeader}>
+                                <ClockIcon size={18} />
+                                <span>Response Delay</span>
+                            </div>
+                            <p className={styles.testOptionDesc}>
+                                Simulate slow response times to test timeout handling
+                            </p>
+                            <div className={styles.sliderContainer}>
+                                <input
+                                    type="range"
+                                    min="0"
+                                    max="30000"
+                                    step="500"
+                                    value={delayInput}
+                                    onChange={(e) => setDelayInput(Number(e.target.value))}
+                                    className={styles.slider}
+                                />
+                                <span className={styles.sliderValue}>
+                                    {delayInput >= 1000
+                                        ? `${(delayInput / 1000).toFixed(1)}s`
+                                        : `${delayInput}ms`
+                                    }
+                                </span>
+                            </div>
+                        </div>
+
+                        <div className={styles.testOptionSection}>
+                            <div className={styles.testOptionHeader}>
+                                <AlertCircleIcon size={18} />
+                                <span>Response Status Code</span>
+                            </div>
+                            <p className={styles.testOptionDesc}>
+                                Return custom status codes to test error handling
+                            </p>
+                            <select
+                                value={statusCodeInput}
+                                onChange={(e) => setStatusCodeInput(Number(e.target.value))}
+                                className={styles.statusSelect}
+                            >
+                                {STATUS_CODE_OPTIONS.map((option) => (
+                                    <option key={option.value} value={option.value}>
+                                        {option.label}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div className={styles.dialogActions}>
+                            <button
+                                onClick={() => setShowTestOptionsDialog(false)}
+                                className={styles.cancelButton}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleTestOptionsSubmit}
+                                className={styles.confirmButton}
+                                disabled={savingTestOptions}
+                            >
+                                {savingTestOptions ? 'Saving...' : 'Save Options'}
                             </button>
                         </div>
                     </div>
