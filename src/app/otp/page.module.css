@@ -63,34 +63,25 @@
     font-weight: 500;
 }
 
-/* Navigation */
-.nav {
-    text-align: center;
-    margin-bottom: 2rem;
-}
-
-.navLink {
-    display: inline-block;
-    padding: 0.75rem 1.5rem;
-    background: var(--neo-white);
-    border: 3px solid var(--neo-black);
-    box-shadow: 4px 4px 0px var(--neo-black);
-    color: var(--neo-black);
-    font-family: 'Lexend Mega', sans-serif;
-    font-weight: 700;
-    font-size: 0.85rem;
-    text-decoration: none;
-    text-transform: uppercase;
-}
-
-.navLink:hover {
-    background: var(--neo-yellow);
-}
-
-/* Main Content */
-.otpContent {
-    max-width: 600px;
+/* Two Column Grid Layout */
+.mainGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    max-width: 1400px;
     margin: 0 auto;
+}
+
+.leftColumn {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.rightColumn {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
 }
 
 /* Input Section */
@@ -99,7 +90,6 @@
     border: 4px solid var(--neo-black);
     box-shadow: 8px 8px 0px var(--neo-black);
     padding: 1.5rem;
-    margin-bottom: 2rem;
 }
 
 .inputGroup {
@@ -245,7 +235,25 @@
     border: 4px solid var(--neo-black);
     color: var(--neo-white);
     font-weight: 700;
-    margin-bottom: 2rem;
+}
+
+/* OTP Placeholder */
+.otpPlaceholder {
+    background: var(--neo-white);
+    border: 4px solid var(--neo-black);
+    box-shadow: 8px 8px 0px var(--neo-black);
+    padding: 4rem 2rem;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    color: var(--text-muted);
+}
+
+.otpPlaceholder p {
+    font-size: 1rem;
+    max-width: 280px;
 }
 
 /* OTP Display */
@@ -255,7 +263,6 @@
     box-shadow: 8px 8px 0px var(--neo-black);
     padding: 2rem;
     text-align: center;
-    margin-bottom: 2rem;
 }
 
 /* OTP Triple Layout */
@@ -376,7 +383,6 @@
     box-shadow: 8px 8px 0px var(--neo-black);
     padding: 1.5rem;
     text-align: center;
-    margin-bottom: 2rem;
 }
 
 .qrSection h3 {
@@ -417,7 +423,6 @@
     border: 4px solid var(--neo-black);
     box-shadow: 8px 8px 0px var(--neo-black);
     padding: 1.5rem;
-    margin-bottom: 2rem;
 }
 
 .epochHeader {
@@ -437,9 +442,9 @@
 }
 
 .epochGrid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
 }
 
 .epochItem {
@@ -473,7 +478,6 @@
     border: 4px solid var(--neo-black);
     box-shadow: 8px 8px 0px var(--neo-black);
     padding: 1.5rem;
-    margin-bottom: 2rem;
 }
 
 .savedKeys h3 {
@@ -583,61 +587,188 @@
     margin-bottom: 1rem;
 }
 
-/* Password Row */
-.passwordRow {
-    display: flex;
-    gap: 0.5rem;
-}
-
-.passwordInput {
-    flex: 1;
-    padding: 0.75rem;
-    font-size: 1rem;
-    border: 3px solid var(--neo-black);
-    background: var(--bg-primary);
-    outline: none;
-}
-
-.passwordInput:focus {
-    box-shadow: 4px 4px 0px var(--neo-black);
-}
-
+/* Unlock Button in Saved Keys */
 .unlockButton {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
     padding: 0.75rem 1.5rem;
     background: var(--neo-green);
     border: 3px solid var(--neo-black);
+    box-shadow: 4px 4px 0px var(--neo-black);
     color: var(--neo-black);
     font-family: 'Lexend Mega', sans-serif;
     font-weight: 700;
     font-size: 0.85rem;
     text-transform: uppercase;
     cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.1s;
 }
 
 .unlockButton:hover {
     background: var(--neo-yellow);
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0px var(--neo-black);
 }
 
-/* Password Actions */
-.passwordActions {
+/* ==================== */
+/* Dialog Styles        */
+/* ==================== */
+
+.dialogOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 1rem;
+    animation: fadeIn 0.15s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.dialog {
+    background: var(--neo-white);
+    border: 4px solid var(--neo-black);
+    box-shadow: 12px 12px 0px var(--neo-black);
+    padding: 2rem;
+    max-width: 420px;
+    width: 100%;
+    position: relative;
+    animation: slideIn 0.2s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.dialogClose {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: var(--text-muted);
+    padding: 0.25rem;
+    transition: color 0.15s;
+}
+
+.dialogClose:hover {
+    color: var(--neo-black);
+}
+
+.dialogHeader {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+}
+
+.dialogHeader h2 {
+    font-family: 'Lexend Mega', sans-serif;
+    font-weight: 900;
+    font-size: 1.25rem;
+    text-transform: uppercase;
+    color: var(--neo-black);
+    margin: 0;
+}
+
+.dialogText {
+    font-size: 0.95rem;
+    color: var(--text-muted);
+    margin-bottom: 1.5rem;
+}
+
+.dialogError {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background: var(--neo-red);
+    border: 3px solid var(--neo-black);
+    color: var(--neo-white);
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+}
+
+.dialogInput {
+    width: 100%;
+    padding: 1rem;
+    font-size: 1rem;
+    border: 3px solid var(--neo-black);
+    background: var(--bg-primary);
+    color: var(--neo-black);
+    outline: none;
+    margin-bottom: 1rem;
+}
+
+.dialogInput:focus {
+    box-shadow: 4px 4px 0px var(--neo-black);
+}
+
+.dialogActions {
     display: flex;
     gap: 0.75rem;
-    margin-top: 1rem;
+    margin-top: 0.5rem;
 }
 
-.cancelButton {
-    padding: 0.75rem 1.5rem;
+.dialogPrimary {
+    flex: 1;
+    padding: 1rem 1.5rem;
+    background: var(--neo-green);
+    border: 3px solid var(--neo-black);
+    box-shadow: 4px 4px 0px var(--neo-black);
+    color: var(--neo-black);
+    font-family: 'Lexend Mega', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.1s;
+}
+
+.dialogPrimary:hover {
+    background: var(--neo-yellow);
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0px var(--neo-black);
+}
+
+.dialogSecondary {
+    padding: 1rem 1.5rem;
     background: var(--neo-white);
     border: 3px solid var(--neo-black);
     color: var(--neo-black);
     font-family: 'Lexend Mega', sans-serif;
     font-weight: 700;
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     text-transform: uppercase;
     cursor: pointer;
 }
 
-.cancelButton:hover {
+.dialogSecondary:hover {
     background: var(--neo-red);
     color: var(--neo-white);
 }
@@ -670,7 +801,18 @@
 }
 
 /* Responsive */
+@media (max-width: 1024px) {
+    .mainGrid {
+        grid-template-columns: 1fr;
+        max-width: 600px;
+    }
+}
+
 @media (max-width: 600px) {
+    .container {
+        padding: 1rem;
+    }
+
     .otpTriple {
         grid-template-columns: 1fr;
         gap: 1.5rem;
@@ -686,7 +828,11 @@
         font-size: 1.5rem;
     }
 
-    .epochGrid {
-        grid-template-columns: 1fr;
+    .dialog {
+        padding: 1.5rem;
+    }
+
+    .dialogHeader h2 {
+        font-size: 1rem;
     }
 }

@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import QRCode from 'qrcode';
 import { generateTOTP, getTimeRemaining, isValidBase32, generateRandomSecret, secretToHex, getEpochInfo, generateTOTPWithOffset } from '@/lib/totp';
 import Navigation from '@/components/Navigation';
-import { CopyIcon, AlertIcon, CheckIcon, GithubIcon, LockIcon, KeyIcon, RefreshIcon, InfoCircleIcon } from '@/components/Icons';
+import { CopyIcon, AlertIcon, CheckIcon, GithubIcon, LockIcon, KeyIcon, RefreshIcon, InfoCircleIcon, XIcon } from '@/components/Icons';
 import styles from './page.module.css';
 
 interface SavedKey {
@@ -42,9 +42,11 @@ export default function OTPPage() {
     const [storedPasswordHash, setStoredPasswordHash] = useState<string | null>(null);
     const [isUnlocked, setIsUnlocked] = useState(false);
     const [passwordInput, setPasswordInput] = useState('');
-    const [showSetPassword, setShowSetPassword] = useState(false);
+    const [showUnlockDialog, setShowUnlockDialog] = useState(false);
+    const [showSetPasswordDialog, setShowSetPasswordDialog] = useState(false);
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [dialogError, setDialogError] = useState<string | null>(null);
 
     // Simple hash function for password
     const hashPassword = async (pw: string): Promise<string> => {
@@ -96,7 +98,7 @@ export default function OTPPage() {
 
     const handleUnlock = async () => {
         if (!passwordInput.trim()) {
-            setError('Please enter your password');
+            setDialogError('Please enter your password');
             return;
         }
 
@@ -104,19 +106,20 @@ export default function OTPPage() {
         if (hash === storedPasswordHash) {
             setIsUnlocked(true);
             setPasswordInput('');
-            setError(null);
+            setDialogError(null);
+            setShowUnlockDialog(false);
         } else {
-            setError('Incorrect password');
+            setDialogError('Incorrect password');
         }
     };
 
     const handleSetPassword = async () => {
         if (newPassword.length < 4) {
-            setError('Password must be at least 4 characters');
+            setDialogError('Password must be at least 4 characters');
             return;
         }
         if (newPassword !== confirmPassword) {
-            setError('Passwords do not match');
+            setDialogError('Passwords do not match');
             return;
         }
 
@@ -124,10 +127,19 @@ export default function OTPPage() {
         localStorage.setItem('otp-password-hash', hash);
         setStoredPasswordHash(hash);
         setIsUnlocked(true);
-        setShowSetPassword(false);
+        setShowSetPasswordDialog(false);
         setNewPassword('');
         setConfirmPassword('');
-        setError(null);
+        setDialogError(null);
+    };
+
+    const closeDialog = () => {
+        setShowUnlockDialog(false);
+        setShowSetPasswordDialog(false);
+        setPasswordInput('');
+        setNewPassword('');
+        setConfirmPassword('');
+        setDialogError(null);
     };
 
     const generateOTP = useCallback(async (secretKey: string) => {
@@ -263,296 +275,257 @@ export default function OTPPage() {
                 </p>
             </header>
 
-            {/* Main Content */}
-            <div className={styles.otpContent}>
-                {/* Input Section */}
-                <div className={styles.inputSection}>
-                    <div className={styles.inputGroup}>
-                        <div className={styles.labelRow}>
-                            <label>Secret Key (Base32)</label>
-                            <button
-                                onClick={handleGenerateRandomSecret}
-                                className={styles.generateButton}
-                                title="Generate random secret"
-                            >
-                                <RefreshIcon size={18} />
-                                Generate
-                            </button>
-                        </div>
-                        <input
-                            type="text"
-                            value={secret}
-                            onChange={(e) => {
-                                setSecret(e.target.value);
-                                setActiveKeyId(null);
-                                setError(null);
-                            }}
-                            placeholder="JBSWY3DPEHPK3PXP"
-                            className={styles.secretInput}
-                        />
-                    </div>
-
-                    {/* Hex Display */}
-                    {hexSecret && (
+            {/* Main Content - Two Column Layout */}
+            <div className={styles.mainGrid}>
+                {/* Left Column - Input & Keys */}
+                <div className={styles.leftColumn}>
+                    {/* Input Section */}
+                    <div className={styles.inputSection}>
                         <div className={styles.inputGroup}>
                             <div className={styles.labelRow}>
-                                <label>Secret (Hex)</label>
+                                <label>Secret Key (Base32)</label>
                                 <button
-                                    onClick={() => handleCopy(hexSecret, 'hex')}
-                                    className={styles.smallCopyButton}
+                                    onClick={handleGenerateRandomSecret}
+                                    className={styles.generateButton}
+                                    title="Generate random secret"
                                 >
-                                    {copiedItem === 'hex' ? <CheckIcon size={14} /> : <CopyIcon size={14} />}
+                                    <RefreshIcon size={18} />
+                                    Generate
                                 </button>
                             </div>
                             <input
                                 type="text"
-                                value={hexSecret}
-                                readOnly
-                                className={styles.hexInput}
+                                value={secret}
+                                onChange={(e) => {
+                                    setSecret(e.target.value);
+                                    setActiveKeyId(null);
+                                    setError(null);
+                                }}
+                                placeholder="JBSWY3DPEHPK3PXP"
+                                className={styles.secretInput}
                             />
+                        </div>
+
+                        {/* Hex Display */}
+                        {hexSecret && (
+                            <div className={styles.inputGroup}>
+                                <div className={styles.labelRow}>
+                                    <label>Secret (Hex)</label>
+                                    <button
+                                        onClick={() => handleCopy(hexSecret, 'hex')}
+                                        className={styles.smallCopyButton}
+                                    >
+                                        {copiedItem === 'hex' ? <CheckIcon size={14} /> : <CopyIcon size={14} />}
+                                    </button>
+                                </div>
+                                <input
+                                    type="text"
+                                    value={hexSecret}
+                                    readOnly
+                                    className={styles.hexInput}
+                                />
+                            </div>
+                        )}
+
+                        <div className={styles.inputGroup}>
+                            <label>Key Name (optional)</label>
+                            <div className={styles.saveRow}>
+                                <input
+                                    type="text"
+                                    value={keyName}
+                                    onChange={(e) => setKeyName(e.target.value)}
+                                    placeholder="My Account"
+                                    className={styles.nameInput}
+                                />
+                                <button
+                                    onClick={handleSaveKey}
+                                    className={styles.saveButton}
+                                    disabled={!secret.trim() || !isValidBase32(secret)}
+                                >
+                                    Save
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Error Message */}
+                    {error && (
+                        <div className={styles.errorMessage}>
+                            <AlertIcon size={20} />
+                            {error}
                         </div>
                     )}
 
-                    <div className={styles.inputGroup}>
-                        <label>Key Name (optional)</label>
-                        <div className={styles.saveRow}>
-                            <input
-                                type="text"
-                                value={keyName}
-                                onChange={(e) => setKeyName(e.target.value)}
-                                placeholder="My Account"
-                                className={styles.nameInput}
-                            />
+                    {/* Saved Keys Section */}
+                    {hasSavedKeysLocked ? (
+                        <div className={styles.savedKeys}>
+                            <div className={styles.lockHeader}>
+                                <LockIcon size={24} />
+                                <h3>Saved Keys (Locked)</h3>
+                            </div>
+                            <p className={styles.lockNote}>Your saved keys are password protected</p>
                             <button
-                                onClick={handleSaveKey}
-                                className={styles.saveButton}
-                                disabled={!secret.trim() || !isValidBase32(secret)}
+                                onClick={() => setShowUnlockDialog(true)}
+                                className={styles.unlockButton}
                             >
-                                Save
+                                <LockIcon size={18} />
+                                Unlock Keys
                             </button>
                         </div>
-                    </div>
+                    ) : (isUnlocked || !storedPasswordHash) && savedKeys.length > 0 ? (
+                        <div className={styles.savedKeys}>
+                            <h3>Saved Keys</h3>
+                            <div className={styles.keysList}>
+                                {savedKeys.map(key => (
+                                    <div
+                                        key={key.id}
+                                        className={`${styles.keyItem} ${activeKeyId === key.id ? styles.keyActive : ''}`}
+                                    >
+                                        <button
+                                            onClick={() => handleSelectKey(key)}
+                                            className={styles.keySelect}
+                                        >
+                                            {key.name}
+                                        </button>
+                                        <button
+                                            onClick={() => handleDeleteKey(key.id)}
+                                            className={styles.keyDelete}
+                                        >
+                                            ×
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                            <div className={styles.keysFooter}>
+                                <p className={styles.keysNote}>
+                                    <LockIcon size={14} /> Stored locally in browser
+                                </p>
+                                {!storedPasswordHash && (
+                                    <button
+                                        onClick={() => setShowSetPasswordDialog(true)}
+                                        className={styles.setPasswordBtn}
+                                    >
+                                        Set Password
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    ) : null}
+
+                    {/* QR Code Section */}
+                    {showQRCode && (
+                        <div className={styles.qrSection}>
+                            <h3>QR Code</h3>
+                            <div className={styles.qrContainer}>
+                                <canvas ref={qrCanvasRef} className={styles.qrCanvas} />
+                            </div>
+                            <p className={styles.qrNote}>Scan with authenticator app</p>
+                        </div>
+                    )}
                 </div>
 
-                {/* Error Message */}
-                {error && (
-                    <div className={styles.errorMessage}>
-                        <AlertIcon size={20} />
-                        {error}
-                    </div>
-                )}
-
-                {/* OTP Display - Previous/Current/Next */}
-                {otpCodes && (
-                    <div className={styles.otpDisplay}>
-                        <div className={styles.otpTriple}>
-                            {/* Previous OTP */}
-                            <div className={styles.otpColumn}>
-                                <span className={styles.otpLabel}>Previous</span>
-                                <div className={styles.otpCodeSmall}>
-                                    {otpCodes.previous}
-                                </div>
-                                <button
-                                    onClick={() => handleCopy(otpCodes.previous, 'previous')}
-                                    className={styles.smallCopyButton}
-                                >
-                                    {copiedItem === 'previous' ? <CheckIcon size={14} /> : <CopyIcon size={14} />}
-                                </button>
-                            </div>
-
-                            {/* Current OTP */}
-                            <div className={styles.otpColumnMain}>
-                                <span className={styles.otpLabel}>Current</span>
-                                <div className={styles.otpCode}>
-                                    {otpCodes.current.split('').map((digit, i) => (
-                                        <span key={i} className={styles.otpDigit}>{digit}</span>
-                                    ))}
-                                </div>
-                                <button
-                                    onClick={() => handleCopy(otpCodes.current, 'current')}
-                                    className={styles.copyButton}
-                                >
-                                    {copiedItem === 'current' ? (
-                                        <>
-                                            <CheckIcon size={20} />
-                                            Copied!
-                                        </>
-                                    ) : (
-                                        <>
-                                            <CopyIcon size={20} />
-                                            Copy
-                                        </>
-                                    )}
-                                </button>
-                            </div>
-
-                            {/* Next OTP */}
-                            <div className={styles.otpColumn}>
-                                <span className={styles.otpLabel}>Next</span>
-                                <div className={styles.otpCodeSmall}>
-                                    {otpCodes.next}
-                                </div>
-                                <button
-                                    onClick={() => handleCopy(otpCodes.next, 'next')}
-                                    className={styles.smallCopyButton}
-                                >
-                                    {copiedItem === 'next' ? <CheckIcon size={14} /> : <CopyIcon size={14} />}
-                                </button>
-                            </div>
-                        </div>
-
-                        <div className={styles.otpTimer}>
-                            <div className={styles.timerBar}>
-                                <div
-                                    className={styles.timerFill}
-                                    style={{ width: `${progressPercent}%` }}
-                                />
-                            </div>
-                            <span className={styles.timerText}>{timeRemaining}s</span>
-                        </div>
-                    </div>
-                )}
-
-                {/* QR Code Section */}
-                {showQRCode && (
-                    <div className={styles.qrSection}>
-                        <h3>QR Code</h3>
-                        <div className={styles.qrContainer}>
-                            <canvas ref={qrCanvasRef} className={styles.qrCanvas} />
-                        </div>
-                        <p className={styles.qrNote}>Scan with authenticator app</p>
-                    </div>
-                )}
-
-                {/* Epoch Info Section */}
-                {epochInfo && otpCodes && (
-                    <div className={styles.epochSection}>
-                        <div className={styles.epochHeader}>
-                            <InfoCircleIcon size={20} />
-                            <h3>Technical Info</h3>
-                        </div>
-                        <div className={styles.epochGrid}>
-                            <div className={styles.epochItem}>
-                                <span className={styles.epochLabel}>Epoch</span>
-                                <span className={styles.epochValue}>{epochInfo.epoch}</span>
-                            </div>
-                            <div className={styles.epochItem}>
-                                <span className={styles.epochLabel}>Iteration</span>
-                                <span className={styles.epochValue}>{epochInfo.iteration}</span>
-                            </div>
-                            <div className={styles.epochItem}>
-                                <span className={styles.epochLabel}>Iteration (Hex)</span>
-                                <span className={styles.epochValue}>{epochInfo.iterationHex}</span>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* Password Protected Saved Keys */}
-                {hasSavedKeysLocked && (
-                    <div className={styles.savedKeys}>
-                        <div className={styles.lockHeader}>
-                            <LockIcon size={24} />
-                            <h3>Saved Keys (Locked)</h3>
-                        </div>
-                        <p className={styles.lockNote}>Enter password to view saved keys</p>
-                        <div className={styles.passwordRow}>
-                            <input
-                                type="password"
-                                value={passwordInput}
-                                onChange={(e) => setPasswordInput(e.target.value)}
-                                placeholder="Enter password"
-                                className={styles.passwordInput}
-                                onKeyDown={(e) => e.key === 'Enter' && handleUnlock()}
-                            />
-                            <button onClick={handleUnlock} className={styles.unlockButton}>
-                                Unlock
-                            </button>
-                        </div>
-                    </div>
-                )}
-
-                {/* Unlocked Saved Keys */}
-                {(isUnlocked || !storedPasswordHash) && savedKeys.length > 0 && (
-                    <div className={styles.savedKeys}>
-                        <h3>Saved Keys</h3>
-                        <div className={styles.keysList}>
-                            {savedKeys.map(key => (
-                                <div
-                                    key={key.id}
-                                    className={`${styles.keyItem} ${activeKeyId === key.id ? styles.keyActive : ''}`}
-                                >
+                {/* Right Column - OTP Display & Info */}
+                <div className={styles.rightColumn}>
+                    {/* OTP Display - Previous/Current/Next */}
+                    {otpCodes ? (
+                        <div className={styles.otpDisplay}>
+                            <div className={styles.otpTriple}>
+                                {/* Previous OTP */}
+                                <div className={styles.otpColumn}>
+                                    <span className={styles.otpLabel}>Previous</span>
+                                    <div className={styles.otpCodeSmall}>
+                                        {otpCodes.previous}
+                                    </div>
                                     <button
-                                        onClick={() => handleSelectKey(key)}
-                                        className={styles.keySelect}
+                                        onClick={() => handleCopy(otpCodes.previous, 'previous')}
+                                        className={styles.smallCopyButton}
                                     >
-                                        {key.name}
-                                    </button>
-                                    <button
-                                        onClick={() => handleDeleteKey(key.id)}
-                                        className={styles.keyDelete}
-                                    >
-                                        ×
+                                        {copiedItem === 'previous' ? <CheckIcon size={14} /> : <CopyIcon size={14} />}
                                     </button>
                                 </div>
-                            ))}
-                        </div>
-                        <div className={styles.keysFooter}>
-                            <p className={styles.keysNote}>
-                                <LockIcon size={14} /> Keys stored locally in your browser (localStorage)
-                            </p>
-                            {!storedPasswordHash && (
-                                <button
-                                    onClick={() => setShowSetPassword(true)}
-                                    className={styles.setPasswordBtn}
-                                >
-                                    Set Password
-                                </button>
-                            )}
-                        </div>
-                    </div>
-                )}
 
-                {/* Set Password Modal */}
-                {showSetPassword && (
-                    <div className={styles.savedKeys}>
-                        <h3>Set Password Protection</h3>
-                        <p className={styles.lockNote}>Protect your saved keys with a password</p>
-                        <div className={styles.inputGroup}>
-                            <input
-                                type="password"
-                                value={newPassword}
-                                onChange={(e) => setNewPassword(e.target.value)}
-                                placeholder="New password (min 4 chars)"
-                                className={styles.passwordInput}
-                            />
+                                {/* Current OTP */}
+                                <div className={styles.otpColumnMain}>
+                                    <span className={styles.otpLabel}>Current</span>
+                                    <div className={styles.otpCode}>
+                                        {otpCodes.current.split('').map((digit, i) => (
+                                            <span key={i} className={styles.otpDigit}>{digit}</span>
+                                        ))}
+                                    </div>
+                                    <button
+                                        onClick={() => handleCopy(otpCodes.current, 'current')}
+                                        className={styles.copyButton}
+                                    >
+                                        {copiedItem === 'current' ? (
+                                            <>
+                                                <CheckIcon size={20} />
+                                                Copied!
+                                            </>
+                                        ) : (
+                                            <>
+                                                <CopyIcon size={20} />
+                                                Copy
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+
+                                {/* Next OTP */}
+                                <div className={styles.otpColumn}>
+                                    <span className={styles.otpLabel}>Next</span>
+                                    <div className={styles.otpCodeSmall}>
+                                        {otpCodes.next}
+                                    </div>
+                                    <button
+                                        onClick={() => handleCopy(otpCodes.next, 'next')}
+                                        className={styles.smallCopyButton}
+                                    >
+                                        {copiedItem === 'next' ? <CheckIcon size={14} /> : <CopyIcon size={14} />}
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className={styles.otpTimer}>
+                                <div className={styles.timerBar}>
+                                    <div
+                                        className={styles.timerFill}
+                                        style={{ width: `${progressPercent}%` }}
+                                    />
+                                </div>
+                                <span className={styles.timerText}>{timeRemaining}s</span>
+                            </div>
                         </div>
-                        <div className={styles.inputGroup}>
-                            <input
-                                type="password"
-                                value={confirmPassword}
-                                onChange={(e) => setConfirmPassword(e.target.value)}
-                                placeholder="Confirm password"
-                                className={styles.passwordInput}
-                            />
+                    ) : (
+                        <div className={styles.otpPlaceholder}>
+                            <KeyIcon size={64} />
+                            <p>Enter a secret key or click Generate to start</p>
                         </div>
-                        <div className={styles.passwordActions}>
-                            <button onClick={handleSetPassword} className={styles.saveButton}>
-                                Set Password
-                            </button>
-                            <button
-                                onClick={() => {
-                                    setShowSetPassword(false);
-                                    setNewPassword('');
-                                    setConfirmPassword('');
-                                }}
-                                className={styles.cancelButton}
-                            >
-                                Cancel
-                            </button>
+                    )}
+
+                    {/* Epoch Info Section */}
+                    {epochInfo && otpCodes && (
+                        <div className={styles.epochSection}>
+                            <div className={styles.epochHeader}>
+                                <InfoCircleIcon size={20} />
+                                <h3>Technical Info</h3>
+                            </div>
+                            <div className={styles.epochGrid}>
+                                <div className={styles.epochItem}>
+                                    <span className={styles.epochLabel}>Epoch</span>
+                                    <span className={styles.epochValue}>{epochInfo.epoch}</span>
+                                </div>
+                                <div className={styles.epochItem}>
+                                    <span className={styles.epochLabel}>Iteration</span>
+                                    <span className={styles.epochValue}>{epochInfo.iteration}</span>
+                                </div>
+                                <div className={styles.epochItem}>
+                                    <span className={styles.epochLabel}>Iteration (Hex)</span>
+                                    <span className={styles.epochValue}>{epochInfo.iterationHex}</span>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                )}
+                    )}
+                </div>
             </div>
 
             {/* Footer */}
@@ -567,6 +540,97 @@ export default function OTPPage() {
                     GitHub
                 </a>
             </footer>
+
+            {/* Unlock Password Dialog */}
+            {showUnlockDialog && (
+                <div className={styles.dialogOverlay} onClick={closeDialog}>
+                    <div className={styles.dialog} onClick={e => e.stopPropagation()}>
+                        <button className={styles.dialogClose} onClick={closeDialog}>
+                            <XIcon size={24} />
+                        </button>
+                        <div className={styles.dialogHeader}>
+                            <LockIcon size={32} />
+                            <h2>Unlock Saved Keys</h2>
+                        </div>
+                        <p className={styles.dialogText}>Enter your password to access saved keys</p>
+
+                        {dialogError && (
+                            <div className={styles.dialogError}>
+                                <AlertIcon size={16} />
+                                {dialogError}
+                            </div>
+                        )}
+
+                        <input
+                            type="password"
+                            value={passwordInput}
+                            onChange={(e) => setPasswordInput(e.target.value)}
+                            placeholder="Enter password"
+                            className={styles.dialogInput}
+                            onKeyDown={(e) => e.key === 'Enter' && handleUnlock()}
+                            autoFocus
+                        />
+
+                        <div className={styles.dialogActions}>
+                            <button onClick={handleUnlock} className={styles.dialogPrimary}>
+                                Unlock
+                            </button>
+                            <button onClick={closeDialog} className={styles.dialogSecondary}>
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Set Password Dialog */}
+            {showSetPasswordDialog && (
+                <div className={styles.dialogOverlay} onClick={closeDialog}>
+                    <div className={styles.dialog} onClick={e => e.stopPropagation()}>
+                        <button className={styles.dialogClose} onClick={closeDialog}>
+                            <XIcon size={24} />
+                        </button>
+                        <div className={styles.dialogHeader}>
+                            <LockIcon size={32} />
+                            <h2>Set Password Protection</h2>
+                        </div>
+                        <p className={styles.dialogText}>Protect your saved keys with a password</p>
+
+                        {dialogError && (
+                            <div className={styles.dialogError}>
+                                <AlertIcon size={16} />
+                                {dialogError}
+                            </div>
+                        )}
+
+                        <input
+                            type="password"
+                            value={newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
+                            placeholder="New password (min 4 chars)"
+                            className={styles.dialogInput}
+                            autoFocus
+                        />
+                        <input
+                            type="password"
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            placeholder="Confirm password"
+                            className={styles.dialogInput}
+                            onKeyDown={(e) => e.key === 'Enter' && handleSetPassword()}
+                        />
+
+                        <div className={styles.dialogActions}>
+                            <button onClick={handleSetPassword} className={styles.dialogPrimary}>
+                                Set Password
+                            </button>
+                            <button onClick={closeDialog} className={styles.dialogSecondary}>
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
