@@ -7,6 +7,24 @@ import Toast, { useToast } from '@/components/Toast';
 import { CopyIcon, CheckIcon, RefreshIcon, BoltIcon, TrashIcon, XIcon, AlertIcon } from '@/components/Icons';
 import styles from './page.module.css';
 
+// Language definitions with their variants
+const LANGUAGE_CONFIG = {
+    shell: { label: 'Shell', variants: ['curl', 'wget', 'httpie', 'powershell'] },
+    javascript: { label: 'JavaScript', variants: ['fetch', 'xhr', 'jquery', 'axios'] },
+    python: { label: 'Python', variants: ['requests', 'http'] },
+    java: { label: 'Java', variants: ['okhttp', 'httpurlconnection'] },
+    go: { label: 'Go', variants: [] },
+    php: { label: 'PHP', variants: ['guzzle'] },
+    ruby: { label: 'Ruby', variants: [] },
+    csharp: { label: 'C#', variants: [] },
+    kotlin: { label: 'Kotlin', variants: [] },
+    rust: { label: 'Rust', variants: [] },
+    dart: { label: 'Dart', variants: [] },
+    r: { label: 'R', variants: [] },
+} as const;
+
+type LanguageKey = keyof typeof LANGUAGE_CONFIG;
+
 interface WebhookRequest {
     id: number;
     method: string;
@@ -35,6 +53,11 @@ export default function WebhookDetailPage({ params }: PageProps) {
     const [bodyViewMode, setBodyViewMode] = useState<'pretty' | 'text' | 'preview'>('pretty');
     const { toasts, addToast, removeToast } = useToast();
     const router = useRouter();
+
+    // Client Code states
+    const [selectedLanguage, setSelectedLanguage] = useState<LanguageKey>('shell');
+    const [selectedVariant, setSelectedVariant] = useState<string>('curl');
+    const [codeCopied, setCodeCopied] = useState(false);
 
     const webhookUrl = typeof window !== 'undefined'
         ? `${window.location.origin}/api/hook/${id}`
@@ -241,6 +264,105 @@ export default function WebhookDetailPage({ params }: PageProps) {
         a.download = `request-${selectedRequest.id}-body`;
         a.click();
         URL.revokeObjectURL(url);
+    };
+
+    // Generate curl command from request data
+    const generateCurlCommand = useCallback((request: WebhookRequest): string => {
+        const headers = parseJsonField(request.headers);
+        const queryParams = parseJsonField(request.query_params);
+
+        // Build URL with query params (excluding internal params like _path, _binary)
+        let url = webhookUrl;
+        const filteredParams = Object.entries(queryParams)
+            .filter(([key]) => !key.startsWith('_'));
+        if (filteredParams.length > 0) {
+            const searchParams = new URLSearchParams(filteredParams);
+            url += '?' + searchParams.toString();
+        }
+
+        let cmd = `curl -X ${request.method} '${url}'`;
+
+        // Add headers (excluding some internal ones)
+        const skipHeaders = ['host', 'content-length', 'connection', 'accept-encoding'];
+        for (const [key, value] of Object.entries(headers)) {
+            if (!skipHeaders.includes(key.toLowerCase())) {
+                // Escape single quotes in header values
+                const escapedValue = value.replace(/'/g, "'\\''");
+                cmd += ` \\\n  -H '${key}: ${escapedValue}'`;
+            }
+        }
+
+        // Add body if present
+        if (request.body) {
+            const decodedBody = getDecodedBody(request);
+            // Escape single quotes in body
+            const escapedBody = decodedBody.replace(/'/g, "'\\''");
+            cmd += ` \\\n  -d '${escapedBody}'`;
+        }
+
+        return cmd;
+    }, [webhookUrl]);
+
+    // State for generated code (fetched from server)
+    const [generatedCode, setGeneratedCode] = useState('');
+    const [isGeneratingCode, setIsGeneratingCode] = useState(false);
+
+    // Generate client code via API
+    useEffect(() => {
+        if (!selectedRequest) {
+            setGeneratedCode('');
+            return;
+        }
+
+        const generateCode = async () => {
+            setIsGeneratingCode(true);
+            try {
+                const curlCmd = generateCurlCommand(selectedRequest);
+
+                const response = await fetch('/api/generate-code', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        curlCommand: curlCmd,
+                        language: selectedLanguage,
+                        variant: selectedVariant,
+                    }),
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    setGeneratedCode(`// Error: ${errorData.error || 'Failed to generate code'}`);
+                    return;
+                }
+
+                const data = await response.json();
+                setGeneratedCode(data.code);
+            } catch (error) {
+                console.error('Code generation error:', error);
+                setGeneratedCode(`// Error generating code: ${error instanceof Error ? error.message : 'Unknown error'}`);
+            } finally {
+                setIsGeneratingCode(false);
+            }
+        };
+
+        generateCode();
+    }, [selectedRequest, selectedLanguage, selectedVariant, generateCurlCommand]);
+
+    // Update variant when language changes
+    useEffect(() => {
+        const variants = LANGUAGE_CONFIG[selectedLanguage].variants;
+        if (variants.length > 0) {
+            setSelectedVariant(variants[0] as string);
+        } else {
+            setSelectedVariant('');
+        }
+    }, [selectedLanguage]);
+
+    const copyCode = async () => {
+        await navigator.clipboard.writeText(generatedCode);
+        setCodeCopied(true);
+        addToast('Code copied', 'success');
+        setTimeout(() => setCodeCopied(false), 2000);
     };
 
     const deleteRequest = async (requestId: number) => {
@@ -672,6 +794,47 @@ export default function WebhookDetailPage({ params }: PageProps) {
                                         })()}
                                     </div>
                                 )}
+
+                                {/* Client Code Section */}
+                                <div className={styles.section}>
+                                    <div className={styles.sectionHeader}>
+                                        <h3>Client Code</h3>
+                                        <button onClick={copyCode} className={styles.copyBodyButton} title="Copy code">
+                                            {codeCopied ? <CheckIcon size={14} /> : <CopyIcon size={14} />} Copy
+                                        </button>
+                                    </div>
+
+                                    {/* Language Tabs */}
+                                    <div className={styles.languageTabs}>
+                                        {(Object.keys(LANGUAGE_CONFIG) as LanguageKey[]).map((lang) => (
+                                            <button
+                                                key={lang}
+                                                className={`${styles.languageTab} ${selectedLanguage === lang ? styles.languageTabActive : ''}`}
+                                                onClick={() => setSelectedLanguage(lang)}
+                                            >
+                                                {LANGUAGE_CONFIG[lang].label}
+                                            </button>
+                                        ))}
+                                    </div>
+
+                                    {/* Variant Sub-tabs */}
+                                    {LANGUAGE_CONFIG[selectedLanguage].variants.length > 0 && (
+                                        <div className={styles.variantTabs}>
+                                            {LANGUAGE_CONFIG[selectedLanguage].variants.map((variant) => (
+                                                <button
+                                                    key={variant}
+                                                    className={`${styles.variantTab} ${selectedVariant === variant ? styles.variantTabActive : ''}`}
+                                                    onClick={() => setSelectedVariant(variant)}
+                                                >
+                                                    {variant}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    {/* Generated Code */}
+                                    <pre className={styles.code}>{generatedCode}</pre>
+                                </div>
                             </>
                         ) : (
                             <div className={styles.noSelection}>

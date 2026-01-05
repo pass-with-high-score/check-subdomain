@@ -334,17 +334,39 @@
 }
 
 .code {
-    background: #1a1a1a;
-    color: #f8f8f8;
+    background: linear-gradient(135deg, #1e1e2e 0%, #181825 100%);
+    color: #cdd6f4;
     padding: 1rem;
     border: 3px solid var(--neo-black);
-    font-family: 'Geist Mono', monospace;
+    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.3);
+    font-family: 'Geist Mono', 'Fira Code', 'JetBrains Mono', monospace;
     font-size: 0.8rem;
+    line-height: 1.6;
     overflow-x: auto;
     white-space: pre-wrap;
-    word-break: break-all;
-    max-height: 300px;
+    word-break: break-word;
+    max-height: 350px;
     overflow-y: auto;
+    border-radius: 0;
+    tab-size: 2;
+}
+
+.code::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.code::-webkit-scrollbar-track {
+    background: #313244;
+}
+
+.code::-webkit-scrollbar-thumb {
+    background: #585b70;
+    border-radius: 4px;
+}
+
+.code::-webkit-scrollbar-thumb:hover {
+    background: #6c7086;
 }
 
 /* Body Tabs */
@@ -371,6 +393,64 @@
 
 .bodyTabActive {
     background: var(--neo-yellow);
+}
+
+/* Client Code Language Tabs */
+.languageTabs {
+    display: flex;
+    gap: 0.25rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.5rem;
+}
+
+.languageTab {
+    padding: 0.35rem 0.6rem;
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 0.55rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    background: var(--neo-white);
+    border: 2px solid var(--neo-black);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.languageTab:hover {
+    background: #f0f0f0;
+}
+
+.languageTabActive {
+    background: var(--neo-yellow);
+}
+
+.variantTabs {
+    display: flex;
+    gap: 0.25rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.5rem;
+    padding: 0.5rem;
+    background: #e8e8e8;
+    border: 2px solid var(--neo-black);
+}
+
+.variantTab {
+    padding: 0.25rem 0.5rem;
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 0.55rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    background: var(--neo-white);
+    border: 2px solid var(--neo-black);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.variantTab:hover {
+    background: #f0f0f0;
+}
+
+.variantTabActive {
+    background: var(--neo-cyan);
 }
 
 /* Preview */
