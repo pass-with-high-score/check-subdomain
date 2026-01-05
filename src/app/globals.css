@@ -1,26 +1,88 @@
-@import "tailwindcss";
+/* Neo-Brutalism Global Styles */
+@import url('https://fonts.googleapis.com/css2?family=Lexend+Mega:wght@400;500;600;700;800;900&family=Public+Sans:wght@400;500;600;700&display=swap');
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Neo-Brutalism Color Palette */
+  --neo-black: #000000;
+  --neo-white: #FFFFFF;
+  --neo-yellow: #FFFF00;
+  --neo-pink: #FF00FF;
+  --neo-cyan: #00FFFF;
+  --neo-green: #00FF00;
+  --neo-red: #FF0000;
+  --neo-blue: #0000FF;
+  --neo-orange: #FF6600;
+
+  /* Background */
+  --bg-primary: #FFFEF0;
+  --bg-card: #FFFFFF;
+
+  /* Text */
+  --text-primary: #000000;
+  --text-muted: #333333;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+html,
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  max-width: 100vw;
+  overflow-x: hidden;
+  font-family: 'Public Sans', system-ui, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.5;
+}
+
+/* Headings use Lexend Mega */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: 'Lexend Mega', sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Selection */
+::selection {
+  background: var(--neo-yellow);
+  color: var(--neo-black);
+}
+
+/* Scrollbar - Brutalist style */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--neo-white);
+  border: 3px solid var(--neo-black);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--neo-black);
+  border: 3px solid var(--neo-black);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--neo-pink);
+}
+
+/* Focus visible */
+*:focus-visible {
+  outline: 4px solid var(--neo-black);
+  outline-offset: 2px;
 }

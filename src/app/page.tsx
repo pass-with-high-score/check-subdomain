@@ -1,65 +1,181 @@
-import Image from "next/image";
+'use client';
+
+import { useState } from 'react';
+import SubdomainTable from '@/components/SubdomainTable';
+import styles from './page.module.css';
+
+interface ScanResult {
+  subdomain: string;
+  ip: string | null;
+  cloudflare: boolean;
+}
+
+interface ScanResponse {
+  scan_date: string;
+  domain: string;
+  stats: {
+    total: number;
+    cloudflare: number;
+    no_ip: number;
+  };
+  subdomains: ScanResult[];
+}
 
 export default function Home() {
+  const [domain, setDomain] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [result, setResult] = useState<ScanResponse | null>(null);
+
+  const handleScan = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!domain.trim()) {
+      setError('Please enter a domain');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    setResult(null);
+
+    try {
+      const response = await fetch('/api/scan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ domain: domain.trim() }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to scan domain');
+      }
+
+      const data: ScanResponse = await response.json();
+      setResult(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleExportJSON = () => {
+    if (!result) return;
+
+    const blob = new Blob([JSON.stringify(result, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${result.domain}-subdomains-${result.scan_date.replace(/[: ]/g, '-')}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className={styles.container}>
+      {/* Background Effects */}
+      <div className={styles.backgroundGradient}></div>
+      <div className={styles.backgroundGrid}></div>
+
+      {/* Header */}
+      <header className={styles.header}>
+        <div className={styles.logo}>
+          <span className={styles.logoIcon}>🔍</span>
+          <h1>Subdomain Scanner</h1>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+        <p className={styles.tagline}>
+          Discover subdomains using Certificate Transparency logs, resolve DNS records, and detect Cloudflare protection
+        </p>
+      </header>
+
+      {/* Search Form */}
+      <form onSubmit={handleScan} className={styles.searchForm}>
+        <div className={styles.inputWrapper}>
+          <input
+            type="text"
+            value={domain}
+            onChange={(e) => setDomain(e.target.value)}
+            placeholder="Enter domain (e.g., example.com)"
+            className={styles.input}
+            disabled={loading}
+          />
+          <button
+            type="submit"
+            className={styles.scanButton}
+            disabled={loading}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+            {loading ? (
+              <>
+                <span className={styles.spinner}></span>
+                Scanning...
+              </>
+            ) : (
+              <>
+                <span className={styles.buttonIcon}>⚡</span>
+                Scan
+              </>
+            )}
+          </button>
         </div>
-      </main>
+      </form>
+
+      {/* Error Message */}
+      {error && (
+        <div className={styles.errorMessage}>
+          <span className={styles.errorIcon}>⚠️</span>
+          {error}
+        </div>
+      )}
+
+      {/* Loading State */}
+      {loading && (
+        <div className={styles.loadingState}>
+          <div className={styles.loadingSpinner}></div>
+          <p>Scanning subdomains...</p>
+          <p className={styles.loadingHint}>This may take a few moments depending on the domain size</p>
+        </div>
+      )}
+
+      {/* Results */}
+      {result && (
+        <div className={styles.results}>
+          {/* Stats Cards */}
+          <div className={styles.statsGrid}>
+            <div className={styles.statCard}>
+              <span className={styles.statValue}>{result.stats.total}</span>
+              <span className={styles.statLabel}>Total Subdomains</span>
+            </div>
+            <div className={`${styles.statCard} ${styles.statCardCloudflare}`}>
+              <span className={styles.statValue}>{result.stats.cloudflare}</span>
+              <span className={styles.statLabel}>Behind Cloudflare</span>
+            </div>
+            <div className={`${styles.statCard} ${styles.statCardNoIp}`}>
+              <span className={styles.statValue}>{result.stats.no_ip}</span>
+              <span className={styles.statLabel}>No IP Found</span>
+            </div>
+          </div>
+
+          {/* Meta Info */}
+          <div className={styles.metaInfo}>
+            <span>Domain: <strong>{result.domain}</strong></span>
+            <span>Scanned: <strong>{result.scan_date}</strong></span>
+            <button onClick={handleExportJSON} className={styles.exportButton}>
+              <span>📥</span> Export JSON
+            </button>
+          </div>
+
+          {/* Table */}
+          <SubdomainTable subdomains={result.subdomains} />
+        </div>
+      )}
+
+      {/* Footer */}
+      <footer className={styles.footer}>
+        <p>Built with Next.js • Using Certificate Transparency logs from crt.sh</p>
+      </footer>
     </div>
   );
 }
