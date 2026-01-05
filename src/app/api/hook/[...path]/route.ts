@@ -112,7 +112,17 @@ async function handleWebhook(request: NextRequest, { params }: RouteParams) {
 
         const contentLength = body.length;
 
-        // Store the request
+        // Determine delay: query param takes priority over saved setting
+        const timeoutParam = request.nextUrl.searchParams.get('timeout');
+        const parsedTimeout = parseTimeout(timeoutParam);
+        const delayMs = parsedTimeout !== null ? parsedTimeout : (endpoint.response_delay_ms || 0);
+
+        // Apply delay BEFORE storing request (so it only appears after delay)
+        if (delayMs > 0) {
+            await new Promise(resolve => setTimeout(resolve, delayMs));
+        }
+
+        // Store the request (after delay so it appears when response is ready)
         const [newRequest] = await sql`
       INSERT INTO webhook_requests (endpoint_id, method, headers, body, query_params, content_length)
       VALUES (${endpointId}::uuid, ${method}, ${JSON.stringify(headers)}, ${body}, ${JSON.stringify(queryParams)}, ${contentLength})
@@ -125,15 +135,6 @@ async function handleWebhook(request: NextRequest, { params }: RouteParams) {
       SET last_activity = NOW() 
       WHERE id = ${endpointId}::uuid
     `;
-
-        // Determine delay: query param takes priority over saved setting
-        const timeoutParam = request.nextUrl.searchParams.get('timeout');
-        const parsedTimeout = parseTimeout(timeoutParam);
-        const delayMs = parsedTimeout !== null ? parsedTimeout : (endpoint.response_delay_ms || 0);
-
-        if (delayMs > 0) {
-            await new Promise(resolve => setTimeout(resolve, delayMs));
-        }
 
         // Determine status code: query param takes priority over saved setting
         const statusParam = request.nextUrl.searchParams.get('status');

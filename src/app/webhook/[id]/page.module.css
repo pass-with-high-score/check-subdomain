@@ -46,6 +46,22 @@
     background: var(--neo-white);
 }
 
+.urlDisplay {
+    flex: 1;
+    margin: 0;
+    padding: 0.875rem 1rem;
+    border: 3px solid var(--neo-black);
+    font-family: 'Geist Mono', monospace;
+    font-size: 0.85rem;
+    background: var(--neo-white);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: flex;
+    align-items: center;
+    user-select: all;
+}
+
 .copyButton,
 .refreshButton {
     padding: 0.875rem 1rem;
@@ -1130,7 +1146,8 @@
         flex-shrink: 0;
     }
 
-    .urlInput {
+    .urlInput,
+    .urlDisplay {
         flex: 1;
         min-width: 0;
         font-size: 0.65rem;

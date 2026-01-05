@@ -654,12 +654,7 @@ export default function WebhookDetailPage({ params }: PageProps) {
                     <button onClick={() => router.push('/webhook')} className={styles.backButton} title="Back to Webhooks">
                         <ArrowLeftIcon size={20} />
                     </button>
-                    <input
-                        type="text"
-                        value={webhookUrl}
-                        readOnly
-                        className={styles.urlInput}
-                    />
+                    <p className={styles.urlDisplay}>{webhookUrl}</p>
                     <button onClick={copyUrl} className={styles.copyButton}>
                         {copied ? <CheckIcon size={18} /> : <CopyIcon size={18} />}
                     </button>
