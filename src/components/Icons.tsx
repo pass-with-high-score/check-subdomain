@@ -266,3 +266,20 @@ export function PencilIcon({ className, size = 24, ...props }: IconProps) {
         </svg>
     );
 }
+
+export function ChevronDownIcon({ className, size = 24, ...props }: IconProps) {
+    return (
+        <svg viewBox="0 0 24 24" width={size} height={size} className={className} fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" {...props}>
+            <polyline points="6 9 12 15 18 9" />
+        </svg>
+    );
+}
+
+export function ChevronRightIcon({ className, size = 24, ...props }: IconProps) {
+    return (
+        <svg viewBox="0 0 24 24" width={size} height={size} className={className} fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" {...props}>
+            <polyline points="9 18 15 12 9 6" />
+        </svg>
+    );
+}
+

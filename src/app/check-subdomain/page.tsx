@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import SubdomainTable from '@/components/SubdomainTable';
 import Navigation from '@/components/Navigation';
-import { SearchIcon, BoltIcon, AlertIcon, DownloadIcon, WarningIcon } from '@/components/Icons';
+import { SearchIcon, BoltIcon, AlertIcon, DownloadIcon, WarningIcon, ChevronDownIcon, ChevronRightIcon } from '@/components/Icons';
 import styles from './page.module.css';
 
 interface ScanResult {
