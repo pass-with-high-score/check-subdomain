@@ -69,9 +69,14 @@
 
 /* Responsive */
 @media (max-width: 600px) {
+    .nav {
+        margin: 0 1rem 1.5rem;
+    }
+
     .navContainer {
         flex-direction: column;
         gap: 0.75rem;
+        padding: 0.75rem;
     }
 
     .navLinks {
