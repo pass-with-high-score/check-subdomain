@@ -146,12 +146,35 @@
     gap: 0.5rem;
 }
 
+.nameWrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 1;
+}
+
 .cardHeader h3 {
     font-family: 'Lexend Mega', sans-serif;
     font-size: 0.9rem;
     font-weight: 800;
     text-transform: uppercase;
     word-break: break-word;
+}
+
+.renameButton {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0.25rem;
+    opacity: 0.5;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+}
+
+.renameButton:hover {
+    opacity: 1;
+    color: var(--neo-cyan);
 }
 
 .deleteButton {

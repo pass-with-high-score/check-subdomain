@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Navigation from '@/components/Navigation';
 import Toast, { useToast } from '@/components/Toast';
-import { CopyIcon, CheckIcon, BoltIcon, LinkIcon, ServerIcon, InfoCircleIcon, TrashIcon, PlusIcon } from '@/components/Icons';
+import { CopyIcon, CheckIcon, BoltIcon, LinkIcon, ServerIcon, InfoCircleIcon, TrashIcon, PlusIcon, PencilIcon } from '@/components/Icons';
 import styles from './page.module.css';
 
 const MAX_WEBHOOKS = 10;
@@ -23,6 +23,10 @@ export default function WebhookPage() {
     const [loading, setLoading] = useState(true);
     const [creating, setCreating] = useState(false);
     const [copiedId, setCopiedId] = useState<string | null>(null);
+    // Name Dialog State
+    const [showNameDialog, setShowNameDialog] = useState(false);
+    const [editingWebhook, setEditingWebhook] = useState<WebhookEndpoint | null>(null);
+    const [nameInput, setNameInput] = useState('');
     const { toasts, addToast, removeToast } = useToast();
     const router = useRouter();
 
@@ -82,7 +86,59 @@ export default function WebhookPage() {
         loadEndpoints();
     }, [loadEndpoints]);
 
-    const createEndpoint = async () => {
+    const openCreateDialog = () => {
+        if (endpoints.length >= MAX_WEBHOOKS) {
+            addToast(`Maximum ${MAX_WEBHOOKS} webhooks reached`, 'error');
+            return;
+        }
+        setEditingWebhook(null);
+        setNameInput(`Webhook #${endpoints.length + 1}`);
+        setShowNameDialog(true);
+    };
+
+    const openRenameDialog = (webhook: WebhookEndpoint) => {
+        setEditingWebhook(webhook);
+        setNameInput(webhook.name || `Webhook`);
+        setShowNameDialog(true);
+    };
+
+    const handleNameSubmit = async () => {
+        if (!nameInput.trim()) {
+            addToast('Name cannot be empty', 'error');
+            return;
+        }
+        setShowNameDialog(false);
+
+        if (editingWebhook) {
+            await renameEndpoint(editingWebhook.id, nameInput.trim());
+        } else {
+            await createEndpoint(nameInput.trim());
+        }
+    };
+
+    const renameEndpoint = async (id: string, newName: string) => {
+        try {
+            const response = await fetch(`/api/webhook/endpoint/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: newName }),
+            });
+
+            if (!response.ok) throw new Error('Failed to rename endpoint');
+
+            const updatedEndpoints = endpoints.map(e =>
+                e.id === id ? { ...e, name: newName } : e
+            );
+            setEndpoints(updatedEndpoints);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedEndpoints));
+            addToast('Webhook renamed', 'success');
+        } catch (error) {
+            console.error(error);
+            addToast('Failed to rename webhook', 'error');
+        }
+    };
+
+    const createEndpoint = async (name: string) => {
         if (endpoints.length >= MAX_WEBHOOKS) {
             addToast(`Maximum ${MAX_WEBHOOKS} webhooks reached`, 'error');
             return;
@@ -90,11 +146,10 @@ export default function WebhookPage() {
 
         setCreating(true);
         try {
-            const webhookNumber = endpoints.length + 1;
             const response = await fetch('/api/webhook', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name: `Webhook #${webhookNumber}` }),
+                body: JSON.stringify({ name: name || `Webhook #${endpoints.length + 1}` }),
             });
 
             if (!response.ok) throw new Error('Failed to create endpoint');
@@ -191,7 +246,7 @@ export default function WebhookPage() {
                         <h2>Create a Webhook Endpoint</h2>
                         <p>Get a unique URL to receive and inspect webhook requests.</p>
                         <button
-                            onClick={createEndpoint}
+                            onClick={openCreateDialog}
                             className={styles.createButton}
                             disabled={creating}
                         >
@@ -204,7 +259,16 @@ export default function WebhookPage() {
                             {endpoints.map((endpoint) => (
                                 <div key={endpoint.id} className={styles.webhookCard}>
                                     <div className={styles.cardHeader}>
-                                        <h3>{endpoint.name || `Webhook`}</h3>
+                                        <div className={styles.nameWrapper}>
+                                            <h3>{endpoint.name || `Webhook`}</h3>
+                                            <button
+                                                onClick={() => openRenameDialog(endpoint)}
+                                                className={styles.renameButton}
+                                                title="Rename webhook"
+                                            >
+                                                <PencilIcon size={14} />
+                                            </button>
+                                        </div>
                                         <button
                                             onClick={() => deleteEndpoint(endpoint.id)}
                                             className={styles.deleteButton}
@@ -241,7 +305,7 @@ export default function WebhookPage() {
                             {/* Create New Card */}
                             {canCreateMore && (
                                 <button
-                                    onClick={createEndpoint}
+                                    onClick={openCreateDialog}
                                     className={styles.createCard}
                                     disabled={creating}
                                 >
@@ -283,6 +347,41 @@ export default function WebhookPage() {
                     </div>
                 </div>
             </main>
+
+            {/* Name/Rename Dialog */}
+            {showNameDialog && (
+                <div className={styles.dialogOverlay} onClick={() => setShowNameDialog(false)}>
+                    <div className={styles.dialog} onClick={e => e.stopPropagation()}>
+                        <h3>{editingWebhook ? 'Rename Webhook' : 'Create New Webhook'}</h3>
+                        <input
+                            type="text"
+                            value={nameInput}
+                            onChange={(e) => setNameInput(e.target.value)}
+                            className={styles.dialogInput}
+                            placeholder="Enter webhook name"
+                            autoFocus
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') handleNameSubmit();
+                                if (e.key === 'Escape') setShowNameDialog(false);
+                            }}
+                        />
+                        <div className={styles.dialogActions}>
+                            <button
+                                onClick={() => setShowNameDialog(false)}
+                                className={styles.cancelButton}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleNameSubmit}
+                                className={styles.confirmButton}
+                            >
+                                {editingWebhook ? 'Save' : 'Create'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
