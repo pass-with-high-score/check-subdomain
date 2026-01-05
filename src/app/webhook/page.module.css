@@ -339,6 +339,139 @@
     line-height: 1.4;
 }
 
+/* Dialog Overlay */
+.dialogOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 1rem;
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* Dialog Box */
+.dialog {
+    background: var(--neo-white);
+    border: 4px solid var(--neo-black);
+    box-shadow: 8px 8px 0px var(--neo-black);
+    padding: 1.5rem;
+    width: 100%;
+    max-width: 400px;
+    animation: slideUp 0.2s ease;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.dialog h3 {
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 1rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+/* Dialog Input */
+.dialogInput {
+    width: 100%;
+    padding: 0.875rem 1rem;
+    font-family: 'Inter', sans-serif;
+    font-size: 1rem;
+    background: var(--neo-white);
+    border: 3px solid var(--neo-black);
+    box-shadow: 4px 4px 0px var(--neo-black);
+    outline: none;
+    transition: all 0.15s ease;
+}
+
+.dialogInput:focus {
+    box-shadow: 6px 6px 0px var(--neo-black);
+    transform: translate(-2px, -2px);
+    border-color: var(--neo-cyan);
+}
+
+.dialogInput::placeholder {
+    color: var(--text-muted);
+}
+
+/* Dialog Actions */
+.dialogActions {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1.25rem;
+}
+
+.cancelButton {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    background: var(--neo-white);
+    border: 3px solid var(--neo-black);
+    box-shadow: 4px 4px 0px var(--neo-black);
+    font-family: 'Lexend Mega', sans-serif;
+    font-weight: 700;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.cancelButton:hover {
+    background: #f0f0f0;
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0px var(--neo-black);
+}
+
+.cancelButton:active {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0px var(--neo-black);
+}
+
+.confirmButton {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    background: var(--neo-green);
+    border: 3px solid var(--neo-black);
+    box-shadow: 4px 4px 0px var(--neo-black);
+    font-family: 'Lexend Mega', sans-serif;
+    font-weight: 700;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.confirmButton:hover {
+    background: #00e080;
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0px var(--neo-black);
+}
+
+.confirmButton:active {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0px var(--neo-black);
+}
+
 @media (max-width: 640px) {
     .features {
         grid-template-columns: 1fr;

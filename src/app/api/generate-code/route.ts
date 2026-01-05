@@ -609,6 +609,52 @@ function toDart(data: RequestData): string {
     return code;
 }
 
+// Generate R code
+function toR(data: RequestData): string {
+    let code = 'library(httr)\n';
+    if (data.isBinary) {
+        code += 'library(base64enc)\n';
+    }
+    code += '\n';
+
+    code += `url <- "${data.url}"\n\n`;
+
+    if (Object.keys(data.headers).length > 0) {
+        code += 'headers <- c(\n';
+        const headerEntries = Object.entries(data.headers);
+        headerEntries.forEach(([key, value], index) => {
+            const comma = index < headerEntries.length - 1 ? ',' : '';
+            code += `    "${key}" = "${value}"${comma}\n`;
+        });
+        code += ')\n\n';
+    }
+
+    if (data.body) {
+        if (data.isBinary) {
+            code += `body_base64 <- "${data.body}"\n`;
+            code += 'body <- base64decode(body_base64)\n\n';
+        } else {
+            code += `body <- '${data.body.replace(/'/g, "\\'")}'\n\n`;
+        }
+    }
+
+    code += `response <- ${data.method}(\n`;
+    code += '    url = url';
+
+    if (Object.keys(data.headers).length > 0) {
+        code += ',\n    add_headers(.headers = headers)';
+    }
+
+    if (data.body) {
+        code += ',\n    body = body';
+    }
+
+    code += '\n)\n\n';
+    code += 'content(response, "text")';
+
+    return code;
+}
+
 type GeneratorFn = (data: RequestData) => string;
 
 const generators: Record<string, Record<string, GeneratorFn>> = {
@@ -649,6 +695,9 @@ const generators: Record<string, Record<string, GeneratorFn>> = {
     },
     dart: {
         '': toDart,
+    },
+    r: {
+        '': toR,
     },
 };
 
