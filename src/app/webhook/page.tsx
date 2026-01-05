@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Navigation from '@/components/Navigation';
 import Toast, { useToast } from '@/components/Toast';
-import { CopyIcon, CheckIcon, RefreshIcon, BoltIcon } from '@/components/Icons';
+import { CopyIcon, CheckIcon, RefreshIcon, BoltIcon, LinkIcon, ServerIcon, InfoCircleIcon } from '@/components/Icons';
 import styles from './page.module.css';
 
 interface WebhookEndpoint {
@@ -20,17 +20,51 @@ export default function WebhookPage() {
     const { toasts, addToast, removeToast } = useToast();
     const router = useRouter();
 
-    // Check for stored endpoint
+    // Verify stored endpoint exists in database, create new if not
+    const verifyAndCreateEndpoint = useCallback(async (storedEndpoint: WebhookEndpoint) => {
+        try {
+            // Check if endpoint still exists in database
+            const response = await fetch(`/api/webhook?id=${storedEndpoint.id}`);
+            if (response.ok) {
+                // Endpoint exists, use it
+                setEndpoint(storedEndpoint);
+            } else {
+                // Endpoint not found in DB, clear localStorage and create new
+                localStorage.removeItem('webhook-endpoint');
+                addToast('Previous endpoint expired, creating new one...', 'info');
+
+                // Create new endpoint
+                const createResponse = await fetch('/api/webhook', { method: 'POST' });
+                if (createResponse.ok) {
+                    const data = await createResponse.json();
+                    const newEndpoint: WebhookEndpoint = {
+                        id: data.id,
+                        url: `${window.location.origin}/api/hook/${data.id}`,
+                        created_at: data.created_at,
+                    };
+                    setEndpoint(newEndpoint);
+                    localStorage.setItem('webhook-endpoint', JSON.stringify(newEndpoint));
+                    addToast('New webhook endpoint created', 'success');
+                }
+            }
+        } catch (error) {
+            console.error('Error verifying endpoint:', error);
+            localStorage.removeItem('webhook-endpoint');
+        }
+    }, [addToast]);
+
+    // Check for stored endpoint on mount
     useEffect(() => {
         const stored = localStorage.getItem('webhook-endpoint');
         if (stored) {
             try {
-                setEndpoint(JSON.parse(stored));
+                const storedEndpoint = JSON.parse(stored) as WebhookEndpoint;
+                verifyAndCreateEndpoint(storedEndpoint);
             } catch {
                 localStorage.removeItem('webhook-endpoint');
             }
         }
-    }, []);
+    }, [verifyAndCreateEndpoint]);
 
     const createEndpoint = useCallback(async () => {
         setLoading(true);
@@ -133,15 +167,24 @@ export default function WebhookPage() {
 
                 <div className={styles.features}>
                     <div className={styles.feature}>
-                        <h3>🔗 Unique URL</h3>
-                        <p>Each endpoint gets a unique URL that never expires</p>
+                        <div className={styles.featureIcon}>
+                            <LinkIcon size={24} />
+                        </div>
+                        <h3>Unique URL</h3>
+                        <p>Each endpoint gets a unique URL that expires after 7 days of inactivity</p>
                     </div>
                     <div className={styles.feature}>
-                        <h3>📡 All Methods</h3>
+                        <div className={styles.featureIcon}>
+                            <ServerIcon size={24} />
+                        </div>
+                        <h3>All Methods</h3>
                         <p>Receive GET, POST, PUT, PATCH, DELETE requests</p>
                     </div>
                     <div className={styles.feature}>
-                        <h3>📋 Full Details</h3>
+                        <div className={styles.featureIcon}>
+                            <InfoCircleIcon size={24} />
+                        </div>
+                        <h3>Full Details</h3>
                         <p>View headers, body, query params for each request</p>
                     </div>
                 </div>

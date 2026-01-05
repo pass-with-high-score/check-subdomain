@@ -1,13 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { sql, initDatabase } from '@/lib/db';
+import { sql, initDatabase, cleanupOldEndpoints } from '@/lib/db';
 
 // Initialize database on first request
 let initialized = false;
+let lastCleanup = 0;
+const CLEANUP_INTERVAL = 60 * 60 * 1000; // 1 hour
 
 async function ensureInitialized() {
     if (!initialized) {
         await initDatabase();
         initialized = true;
+    }
+
+    // Run cleanup periodically (max once per hour)
+    const now = Date.now();
+    if (now - lastCleanup > CLEANUP_INTERVAL) {
+        lastCleanup = now;
+        // Run cleanup in background without blocking the request
+        cleanupOldEndpoints().catch(err => console.error('Cleanup error:', err));
     }
 }
 
