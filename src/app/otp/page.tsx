@@ -5,7 +5,7 @@ import QRCode from 'qrcode';
 import { generateTOTP, getTimeRemaining, isValidBase32, generateRandomSecret, secretToHex, getEpochInfo, generateTOTPWithOffset } from '@/lib/totp';
 import Navigation from '@/components/Navigation';
 import Toast, { useToast } from '@/components/Toast';
-import { CopyIcon, AlertIcon, CheckIcon, GithubIcon, LockIcon, KeyIcon, RefreshIcon, InfoCircleIcon, XIcon } from '@/components/Icons';
+import { CopyIcon, AlertIcon, CheckIcon, LockIcon, KeyIcon, RefreshIcon, InfoCircleIcon, XIcon } from '@/components/Icons';
 import styles from './page.module.css';
 
 interface SavedKey {
@@ -529,18 +529,7 @@ export default function OTPPage() {
                 </div>
             </div>
 
-            {/* Footer */}
-            <footer className={styles.footer}>
-                <a
-                    href="https://github.com/pass-with-high-score/check-subdomain"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={styles.githubLink}
-                >
-                    <GithubIcon size={24} />
-                    GitHub
-                </a>
-            </footer>
+
 
             {/* Unlock Password Dialog */}
             {showUnlockDialog && (

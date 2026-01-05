@@ -21,10 +21,23 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    text-decoration: none;
+    transition: transform 0.15s ease;
+}
+
+.brand:hover {
+    transform: translateY(-2px);
 }
 
 .brandIcon {
-    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background: var(--neo-yellow);
+    border: 3px solid var(--neo-black);
+    color: var(--neo-black);
 }
 
 .brandText {
@@ -34,6 +47,22 @@
     color: var(--neo-black);
     text-transform: uppercase;
     letter-spacing: -0.02em;
+}
+
+.githubLink {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.6rem;
+    background: transparent;
+    border: 3px solid var(--neo-black);
+    color: var(--neo-black);
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.githubLink:hover {
+    background: var(--neo-cyan);
 }
 
 .navLinks {

@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback } from 'react';
 import Navigation from '@/components/Navigation';
 import Toast, { useToast } from '@/components/Toast';
-import { CopyIcon, CheckIcon, GithubIcon, ImageIcon, DownloadIcon, TrashIcon, UploadIcon, XIcon } from '@/components/Icons';
+import { CopyIcon, CheckIcon, ImageIcon, DownloadIcon, TrashIcon, UploadIcon, XIcon } from '@/components/Icons';
 import styles from './page.module.css';
 
 type TabType = 'view' | 'encode';
@@ -324,18 +324,7 @@ export default function Base64Page() {
                 )}
             </main>
 
-            {/* Footer */}
-            <footer className={styles.footer}>
-                <a
-                    href="https://github.com/pass-with-high-score/check-subdomain"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={styles.githubLink}
-                >
-                    <GithubIcon size={24} />
-                    GitHub
-                </a>
-            </footer>
+
         </div>
     );
 }
