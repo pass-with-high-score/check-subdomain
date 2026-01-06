@@ -147,9 +147,14 @@ export default function HomePage() {
             <footer className={styles.footer}>
                 <div className={styles.footerLinks}>
                     <p>© 2026 DevTools. Open Source.</p>
-                    <Link href="/policy" className={styles.policyLink}>
-                        Privacy & Terms
-                    </Link>
+                    <div style={{ display: 'flex', gap: '1.5rem' }}>
+                        <Link href="/about" className={styles.policyLink}>
+                            About
+                        </Link>
+                        <Link href="/policy" className={styles.policyLink}>
+                            Privacy & Terms
+                        </Link>
+                    </div>
                 </div>
             </footer>
         </div>

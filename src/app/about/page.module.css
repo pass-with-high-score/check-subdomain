@@ -1,0 +1,418 @@
+/* About Page - Neo-Brutalism Style */
+
+.container {
+    min-height: 100vh;
+    padding: 0 0 4rem 0;
+    position: relative;
+    background: var(--bg-primary);
+}
+
+.backgroundGradient {
+    position: fixed;
+    inset: 0;
+    background:
+        linear-gradient(135deg, #FFFEF0 0%, #FFF8DC 50%, #FFFACD 100%);
+    z-index: -1;
+}
+
+.spinner {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Header */
+.header {
+    background: var(--neo-black);
+    color: var(--neo-white);
+    padding: 2rem 2rem;
+    margin-bottom: 3rem;
+    border-bottom: 4px solid var(--neo-black);
+}
+
+.headerContent {
+    max-width: 900px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.backLink {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--neo-white);
+    font-family: 'Lexend Mega', sans-serif;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.9rem;
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    border: 2px solid var(--neo-white);
+    transition: all 0.15s ease;
+}
+
+.backLink:hover {
+    background: var(--neo-white);
+    color: var(--neo-black);
+    transform: translate(-2px, -2px);
+    box-shadow: 4px 4px 0px var(--neo-white);
+}
+
+.title {
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 2rem;
+    margin-left: auto;
+}
+
+/* Content */
+.content {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 2rem;
+}
+
+/* Hero Section */
+.heroSection {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.logoBox {
+    width: 100px;
+    height: 100px;
+    background: var(--neo-cyan);
+    border: 5px solid var(--neo-black);
+    box-shadow: 10px 10px 0px var(--neo-black);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+    font-size: 3rem;
+}
+
+.heroTitle {
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 2.5rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+}
+
+.heroTagline {
+    font-size: 1.1rem;
+    color: var(--text-muted);
+    max-width: 500px;
+    margin: 0 auto;
+    line-height: 1.6;
+}
+
+/* Team Section */
+.section {
+    background: var(--neo-white);
+    border: 4px solid var(--neo-black);
+    box-shadow: 8px 8px 0px var(--neo-black);
+    padding: 2.5rem;
+    margin-bottom: 2.5rem;
+}
+
+.sectionTitle {
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 3px solid var(--neo-black);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.iconBox {
+    width: 40px;
+    height: 40px;
+    background: var(--neo-yellow);
+    border: 2px solid var(--neo-black);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.iconBoxCyan {
+    background: var(--neo-cyan);
+}
+
+.iconBoxPink {
+    background: var(--neo-pink);
+}
+
+.iconBoxGreen {
+    background: var(--neo-green);
+}
+
+/* Stats Grid */
+.statsGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 1.5rem;
+    margin: 1.5rem 0;
+}
+
+.statCard {
+    text-align: center;
+    padding: 1.5rem 1rem;
+    background: var(--neo-cream);
+    border: 3px solid var(--neo-black);
+}
+
+.statNumber {
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 2rem;
+    font-weight: 900;
+    color: var(--neo-black);
+    display: block;
+}
+
+.statLabel {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+/* Developer Card */
+.developerCard {
+    display: flex;
+    gap: 2rem;
+    align-items: flex-start;
+}
+
+.avatarBox {
+    width: 120px;
+    height: 120px;
+    background: var(--neo-pink);
+    border: 4px solid var(--neo-black);
+    box-shadow: 6px 6px 0px var(--neo-black);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+}
+
+.developerInfo {
+    flex: 1;
+}
+
+.developerName {
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 1.5rem;
+    margin: 0 0 0.5rem 0;
+}
+
+.developerRole {
+    font-size: 1rem;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+}
+
+.developerLocation {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.developerBio {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: var(--text-primary);
+    margin-bottom: 1.5rem;
+}
+
+/* Social Links */
+.socialLinks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.socialLink {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: var(--neo-black);
+    color: var(--neo-white);
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border: 3px solid var(--neo-black);
+    transition: all 0.15s ease;
+}
+
+.socialLink:hover {
+    background: var(--neo-white);
+    color: var(--neo-black);
+    transform: translate(-2px, -2px);
+    box-shadow: 4px 4px 0px var(--neo-black);
+}
+
+/* Projects Section */
+.projectsGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+}
+
+.projectCard {
+    display: block;
+    padding: 1.5rem;
+    background: var(--neo-cream);
+    border: 3px solid var(--neo-black);
+    text-decoration: none;
+    color: var(--neo-black);
+    transition: all 0.15s ease;
+}
+
+.projectCard:hover {
+    transform: translate(-3px, -3px);
+    box-shadow: 6px 6px 0px var(--neo-black);
+}
+
+.projectHeader {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+}
+
+.projectLogo {
+    border-radius: 12px;
+    border: 2px solid var(--neo-black);
+    flex-shrink: 0;
+}
+
+.projectName {
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 1.1rem;
+    margin: 0 0 0.5rem 0;
+}
+
+.projectDesc {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+    margin-bottom: 1rem;
+}
+
+.projectMeta {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.projectLang {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.langDot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--neo-orange);
+}
+
+.langDot.kotlin {
+    background: #A97BFF;
+}
+
+.langDot.swift {
+    background: #F05138;
+}
+
+/* Contact Section */
+.contactInfo {
+    text-align: center;
+}
+
+.contactEmail {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 2rem;
+    background: var(--neo-yellow);
+    border: 4px solid var(--neo-black);
+    color: var(--neo-black);
+    text-decoration: none;
+    font-family: 'Lexend Mega', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    transition: all 0.15s ease;
+}
+
+.contactEmail:hover {
+    transform: translate(-3px, -3px);
+    box-shadow: 6px 6px 0px var(--neo-black);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .header {
+        padding: 1.5rem;
+    }
+
+    .title {
+        font-size: 1.5rem;
+    }
+
+    .heroTitle {
+        font-size: 2rem;
+    }
+
+    .section {
+        padding: 1.5rem;
+    }
+
+    .developerCard {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .developerLocation {
+        justify-content: center;
+    }
+
+    .socialLinks {
+        justify-content: center;
+    }
+
+    .statsGrid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .statsGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .projectsGrid {
+        grid-template-columns: 1fr;
+    }
+}
