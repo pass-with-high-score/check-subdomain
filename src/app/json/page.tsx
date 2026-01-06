@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Navigation from '@/components/Navigation';
 import Toast, { useToast } from '@/components/Toast';
-import { CopyIcon, CheckIcon, CodeIcon, LinkIcon, ClockIcon, TrashIcon, ExternalLinkIcon, UploadIcon } from '@/components/Icons';
+import { CopyIcon, CheckIcon, CodeIcon, LinkIcon, ClockIcon, TrashIcon, ExternalLinkIcon, RefreshIcon, UploadIcon } from '@/components/Icons';
 import styles from './page.module.css';
 
 const STORAGE_KEY = 'json-bins-history';
@@ -59,14 +60,34 @@ function getPreview(json: string, maxLength: number = 60): string {
     }
 }
 
+// Generate code snippets
+function generateSnippets(url: string) {
+    return {
+        javascript: `fetch('${url}')
+  .then(res => res.json())
+  .then(data => console.log(data));`,
+        python: `import requests
+
+response = requests.get('${url}')
+data = response.json()
+print(data)`,
+        curl: `curl -X GET '${url}'`,
+    };
+}
+
 export default function JsonServerPage() {
+    const searchParams = useSearchParams();
     const [jsonInput, setJsonInput] = useState('');
     const [validation, setValidation] = useState<ValidationResult>({ valid: false, error: null, formatted: null });
     const [ttl, setTtl] = useState('7d');
     const [saving, setSaving] = useState(false);
+    const [updating, setUpdating] = useState(false);
     const [result, setResult] = useState<JsonBin | null>(null);
     const [history, setHistory] = useState<JsonBin[]>([]);
     const [copiedField, setCopiedField] = useState<string | null>(null);
+    const [editMode, setEditMode] = useState<{ id: string; token: string } | null>(null);
+    const [showSnippets, setShowSnippets] = useState(false);
+    const [activeSnippet, setActiveSnippet] = useState<'javascript' | 'python' | 'curl'>('javascript');
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const { toasts, addToast, removeToast } = useToast();
@@ -83,6 +104,42 @@ export default function JsonServerPage() {
             }
         }
     }, []);
+
+    // Check for edit mode from URL params
+    useEffect(() => {
+        const editId = searchParams.get('edit');
+        const token = searchParams.get('token');
+
+        if (editId && token) {
+            setEditMode({ id: editId, token });
+            // Load the JSON content
+            fetch(`/j/${editId}`)
+                .then(res => {
+                    if (!res.ok) throw new Error('Not found');
+                    return res.json();
+                })
+                .then(data => {
+                    setJsonInput(JSON.stringify(data, null, 2));
+                    const baseUrl = window.location.origin;
+                    setResult({
+                        id: editId,
+                        url: `${baseUrl}/j/${editId}`,
+                        viewUrl: `${baseUrl}/view/${editId}`,
+                        editUrl: `${baseUrl}/json?edit=${editId}&token=${token}`,
+                        editToken: token,
+                        expiresAt: null,
+                        ttl: 'unknown',
+                        createdAt: new Date().toISOString(),
+                        preview: '',
+                    });
+                    addToast('Loaded for editing', 'success');
+                })
+                .catch(() => {
+                    addToast('Failed to load JSON - may have expired', 'error');
+                    setEditMode(null);
+                });
+        }
+    }, [searchParams, addToast]);
 
     // Validate JSON on input change
     useEffect(() => {
@@ -139,6 +196,7 @@ export default function JsonServerPage() {
             };
 
             setResult(bin);
+            setEditMode({ id: bin.id, token: bin.editToken });
             saveToHistory(bin);
             addToast('JSON saved successfully!', 'success');
         } catch (error) {
@@ -146,6 +204,40 @@ export default function JsonServerPage() {
             addToast(error instanceof Error ? error.message : 'Failed to save JSON', 'error');
         } finally {
             setSaving(false);
+        }
+    };
+
+    const handleUpdate = async () => {
+        if (!validation.valid || !editMode) {
+            addToast('Cannot update', 'error');
+            return;
+        }
+
+        setUpdating(true);
+        try {
+            const response = await fetch(`/api/json?id=${editMode.id}&token=${editMode.token}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: jsonInput,
+            });
+
+            if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.error || 'Failed to update');
+            }
+
+            addToast('JSON updated! Same URL works.', 'success');
+
+            // Update history preview
+            if (result) {
+                const updatedBin = { ...result, preview: getPreview(jsonInput) };
+                saveToHistory(updatedBin);
+            }
+        } catch (error) {
+            console.error(error);
+            addToast(error instanceof Error ? error.message : 'Failed to update', 'error');
+        } finally {
+            setUpdating(false);
         }
     };
 
@@ -171,6 +263,9 @@ export default function JsonServerPage() {
     const handleClear = () => {
         setJsonInput('');
         setResult(null);
+        setEditMode(null);
+        // Clear URL params
+        window.history.replaceState({}, '', '/json');
     };
 
     const handleImportClick = () => {
@@ -214,12 +309,12 @@ export default function JsonServerPage() {
     };
 
     const handleLoadFromHistory = (bin: JsonBin) => {
-        // Fetch the JSON content
         fetch(bin.url)
             .then(res => res.json())
             .then(data => {
                 setJsonInput(JSON.stringify(data, null, 2));
                 setResult(bin);
+                setEditMode({ id: bin.id, token: bin.editToken });
                 addToast('Loaded from history', 'success');
             })
             .catch(() => {
@@ -239,6 +334,8 @@ export default function JsonServerPage() {
         if (diff < 86400000) return `${Math.round(diff / 3600000)}h`;
         return `${Math.round(diff / 86400000)}d`;
     };
+
+    const snippets = result ? generateSnippets(result.url) : null;
 
     return (
         <div className={styles.container}>
@@ -261,6 +358,17 @@ export default function JsonServerPage() {
 
             <main className={styles.main}>
                 <div className={styles.editorSection}>
+                    {/* Edit Mode Indicator */}
+                    {editMode && (
+                        <div className={styles.editModeBar}>
+                            <RefreshIcon size={16} />
+                            <span>Editing: <code>{editMode.id}</code></span>
+                            <button onClick={handleClear} className={styles.exitEditButton}>
+                                Create New
+                            </button>
+                        </div>
+                    )}
+
                     {/* Toolbar */}
                     <div className={styles.toolbar}>
                         <div className={styles.toolbarLeft}>
@@ -304,17 +412,19 @@ export default function JsonServerPage() {
                             </button>
                         </div>
                         <div className={styles.toolbarRight}>
-                            <select
-                                value={ttl}
-                                onChange={(e) => setTtl(e.target.value)}
-                                className={styles.ttlSelect}
-                            >
-                                {TTL_OPTIONS.map(opt => (
-                                    <option key={opt.value} value={opt.value}>
-                                        Expires: {opt.label}
-                                    </option>
-                                ))}
-                            </select>
+                            {!editMode && (
+                                <select
+                                    value={ttl}
+                                    onChange={(e) => setTtl(e.target.value)}
+                                    className={styles.ttlSelect}
+                                >
+                                    {TTL_OPTIONS.map(opt => (
+                                        <option key={opt.value} value={opt.value}>
+                                            Expires: {opt.label}
+                                        </option>
+                                    ))}
+                                </select>
+                            )}
                         </div>
                     </div>
 
@@ -340,14 +450,35 @@ export default function JsonServerPage() {
                         )}
                     </div>
 
-                    {/* Save Button */}
-                    <button
-                        onClick={handleSave}
-                        disabled={!validation.valid || saving}
-                        className={styles.saveButton}
-                    >
-                        {saving ? 'Saving...' : 'Save & Get URL'}
-                    </button>
+                    {/* Action Buttons */}
+                    <div className={styles.actionButtons}>
+                        {editMode ? (
+                            <>
+                                <button
+                                    onClick={handleUpdate}
+                                    disabled={!validation.valid || updating}
+                                    className={styles.updateButton}
+                                >
+                                    {updating ? 'Updating...' : 'Update (Keep URL)'}
+                                </button>
+                                <button
+                                    onClick={handleSave}
+                                    disabled={!validation.valid || saving}
+                                    className={styles.saveNewButton}
+                                >
+                                    {saving ? 'Saving...' : 'Save as New'}
+                                </button>
+                            </>
+                        ) : (
+                            <button
+                                onClick={handleSave}
+                                disabled={!validation.valid || saving}
+                                className={styles.saveButton}
+                            >
+                                {saving ? 'Saving...' : 'Save & Get URL'}
+                            </button>
+                        )}
+                    </div>
 
                     {/* Result Panel */}
                     {result && (
@@ -376,28 +507,55 @@ export default function JsonServerPage() {
                             </div>
 
                             <div className={styles.urlRow}>
-                                <label>Pretty View</label>
+                                <label>With Delay (test loading)</label>
                                 <div className={styles.urlBox}>
-                                    <code>{result.viewUrl}</code>
+                                    <code>{result.url}?delay=2s</code>
                                     <button
-                                        onClick={() => handleCopy(result.viewUrl, 'viewUrl')}
+                                        onClick={() => handleCopy(`${result.url}?delay=2s`, 'delayUrl')}
                                         className={styles.copyButton}
                                     >
-                                        {copiedField === 'viewUrl' ? <CheckIcon size={16} /> : <CopyIcon size={16} />}
+                                        {copiedField === 'delayUrl' ? <CheckIcon size={16} /> : <CopyIcon size={16} />}
                                     </button>
-                                    <a
-                                        href={result.viewUrl}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className={styles.openButton}
-                                    >
-                                        <ExternalLinkIcon size={16} />
-                                    </a>
                                 </div>
                             </div>
 
                             <div className={styles.resultMeta}>
                                 <span><ClockIcon size={14} /> Expires: {formatExpiry(result.expiresAt)}</span>
+                            </div>
+
+                            {/* Code Snippets */}
+                            <div className={styles.snippetsSection}>
+                                <button
+                                    onClick={() => setShowSnippets(!showSnippets)}
+                                    className={styles.snippetsToggle}
+                                >
+                                    {showSnippets ? '▼' : '▶'} Code Snippets
+                                </button>
+
+                                {showSnippets && snippets && (
+                                    <div className={styles.snippetsContent}>
+                                        <div className={styles.snippetTabs}>
+                                            {(['javascript', 'python', 'curl'] as const).map(lang => (
+                                                <button
+                                                    key={lang}
+                                                    onClick={() => setActiveSnippet(lang)}
+                                                    className={`${styles.snippetTab} ${activeSnippet === lang ? styles.activeTab : ''}`}
+                                                >
+                                                    {lang === 'javascript' ? 'JS' : lang === 'python' ? 'Python' : 'cURL'}
+                                                </button>
+                                            ))}
+                                        </div>
+                                        <div className={styles.snippetCode}>
+                                            <pre>{snippets[activeSnippet]}</pre>
+                                            <button
+                                                onClick={() => handleCopy(snippets[activeSnippet], 'snippet')}
+                                                className={styles.snippetCopy}
+                                            >
+                                                {copiedField === 'snippet' ? <CheckIcon size={14} /> : <CopyIcon size={14} />}
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     )}
@@ -423,7 +581,7 @@ export default function JsonServerPage() {
                                         <button
                                             onClick={() => handleLoadFromHistory(bin)}
                                             className={styles.historyButton}
-                                            title="Load"
+                                            title="Load & Edit"
                                         >
                                             <LinkIcon size={14} />
                                         </button>
@@ -451,19 +609,25 @@ export default function JsonServerPage() {
                 {/* Features */}
                 <div className={styles.features}>
                     <div className={styles.feature}>
-                        <div className={styles.featureIcon}>🌐</div>
-                        <h3>Public API</h3>
-                        <p>Fetch your JSON from anywhere with CORS enabled</p>
+                        <div className={styles.featureIcon}>
+                            <RefreshIcon size={24} />
+                        </div>
+                        <h3>Edit Mode</h3>
+                        <p>Update JSON while keeping the same URL</p>
                     </div>
                     <div className={styles.feature}>
-                        <div className={styles.featureIcon}>⚡</div>
-                        <h3>Instant</h3>
-                        <p>No account needed. Paste, save, use.</p>
+                        <div className={styles.featureIcon}>
+                            <ClockIcon size={24} />
+                        </div>
+                        <h3>Mock Delay</h3>
+                        <p>Add ?delay=2s to test loading states</p>
                     </div>
                     <div className={styles.feature}>
-                        <div className={styles.featureIcon}>⏰</div>
-                        <h3>Flexible TTL</h3>
-                        <p>Set expiration from 1 hour to forever</p>
+                        <div className={styles.featureIcon}>
+                            <CodeIcon size={24} />
+                        </div>
+                        <h3>Code Snippets</h3>
+                        <p>Ready-to-use JS, Python, cURL code</p>
                     </div>
                 </div>
             </main>

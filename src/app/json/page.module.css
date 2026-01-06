@@ -432,6 +432,193 @@
     color: var(--text-muted);
 }
 
+/* Edit Mode Bar */
+.editModeBar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: var(--neo-cyan);
+    border: 3px solid var(--neo-black);
+    margin-bottom: 16px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.editModeBar code {
+    font-family: 'Consolas', monospace;
+    background: var(--neo-white);
+    padding: 2px 8px;
+    border: 2px solid var(--neo-black);
+}
+
+.exitEditButton {
+    margin-left: auto;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 12px;
+    background: var(--neo-white);
+    border: 2px solid var(--neo-black);
+    cursor: pointer;
+    transition: all 0.1s ease;
+}
+
+.exitEditButton:hover {
+    background: var(--neo-yellow);
+}
+
+/* Action Buttons */
+.actionButtons {
+    display: flex;
+    gap: 12px;
+}
+
+.updateButton {
+    flex: 2;
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 14px;
+    font-weight: 800;
+    text-transform: uppercase;
+    padding: 16px;
+    background: var(--neo-cyan);
+    color: var(--neo-black);
+    border: 4px solid var(--neo-black);
+    box-shadow: 6px 6px 0 var(--neo-black);
+    cursor: pointer;
+    transition: all 0.1s ease;
+}
+
+.updateButton:hover:not(:disabled) {
+    transform: translate(-2px, -2px);
+    box-shadow: 8px 8px 0 var(--neo-black);
+}
+
+.updateButton:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.saveNewButton {
+    flex: 1;
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 16px;
+    background: var(--neo-white);
+    color: var(--neo-black);
+    border: 4px solid var(--neo-black);
+    box-shadow: 4px 4px 0 var(--neo-black);
+    cursor: pointer;
+    transition: all 0.1s ease;
+}
+
+.saveNewButton:hover:not(:disabled) {
+    background: var(--neo-green);
+}
+
+.saveNewButton:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Code Snippets */
+.snippetsSection {
+    margin-top: 16px;
+    border-top: 2px dashed var(--neo-black);
+    padding-top: 16px;
+}
+
+.snippetsToggle {
+    font-family: 'Public Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-muted);
+    padding: 0;
+}
+
+.snippetsToggle:hover {
+    color: var(--neo-black);
+}
+
+.snippetsContent {
+    margin-top: 12px;
+}
+
+.snippetTabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 8px;
+}
+
+.snippetTab {
+    font-family: 'Public Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 12px;
+    background: var(--neo-white);
+    border: 2px solid var(--neo-black);
+    cursor: pointer;
+    transition: all 0.1s ease;
+}
+
+.snippetTab:hover {
+    background: var(--neo-pink);
+    color: var(--neo-white);
+}
+
+.snippetTab.activeTab {
+    background: var(--neo-black);
+    color: var(--neo-white);
+}
+
+.snippetCode {
+    position: relative;
+    background: #1a1a1a;
+    border: 3px solid var(--neo-black);
+    padding: 12px;
+}
+
+.snippetCode pre {
+    font-family: 'Consolas', monospace;
+    font-size: 12px;
+    line-height: 1.5;
+    color: #00ff00;
+    margin: 0;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+.snippetCopy {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    background: var(--neo-cyan);
+    border: 2px solid var(--neo-black);
+    cursor: pointer;
+}
+
+.snippetCopy:hover {
+    transform: scale(1.1);
+}
+
+/* Feature Icon SVG fix */
+.featureIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--neo-black);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .header {
@@ -467,5 +654,13 @@
     .urlBox code {
         width: 100%;
         margin-bottom: 8px;
+    }
+
+    .actionButtons {
+        flex-direction: column;
+    }
+
+    .editModeBar {
+        flex-wrap: wrap;
     }
 }
