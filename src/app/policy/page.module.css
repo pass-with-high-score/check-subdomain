@@ -1,0 +1,149 @@
+/* Policy Page - Neo-Brutalism Style */
+
+.container {
+    min-height: 100vh;
+    padding: 0 0 4rem 0;
+    position: relative;
+    background: var(--bg-primary);
+}
+
+.backgroundGradient {
+    position: fixed;
+    inset: 0;
+    background:
+        linear-gradient(135deg, #FFFEF0 0%, #FFF8DC 50%, #FFFACD 100%);
+    z-index: -1;
+}
+
+/* Header */
+.header {
+    background: var(--neo-black);
+    color: var(--neo-white);
+    padding: 2rem 2rem;
+    margin-bottom: 3rem;
+    border-bottom: 4px solid var(--neo-black);
+}
+
+.headerContent {
+    max-width: 800px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.backLink {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--neo-white);
+    font-family: 'Lexend Mega', sans-serif;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.9rem;
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    border: 2px solid var(--neo-white);
+    transition: all 0.15s ease;
+}
+
+.backLink:hover {
+    background: var(--neo-white);
+    color: var(--neo-black);
+    transform: translate(-2px, -2px);
+    box-shadow: 4px 4px 0px var(--neo-white);
+}
+
+.title {
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 2rem;
+    margin-left: auto;
+}
+
+/* Content */
+.content {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 2rem;
+}
+
+.section {
+    background: var(--neo-white);
+    border: 4px solid var(--neo-black);
+    box-shadow: 8px 8px 0px var(--neo-black);
+    padding: 2.5rem;
+    margin-bottom: 2.5rem;
+}
+
+.sectionTitle {
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 3px solid var(--neo-black);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.iconBox {
+    width: 40px;
+    height: 40px;
+    background: var(--neo-yellow);
+    border: 2px solid var(--neo-black);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.section p {
+    margin-bottom: 1rem;
+    line-height: 1.6;
+    color: var(--text-primary);
+}
+
+.section ul {
+    list-style-type: none;
+    padding-left: 0;
+    margin-bottom: 1rem;
+}
+
+.section li {
+    padding-left: 1.5rem;
+    position: relative;
+    margin-bottom: 0.5rem;
+    line-height: 1.5;
+}
+
+.section li::before {
+    content: "→";
+    position: absolute;
+    left: 0;
+    color: var(--neo-blue);
+    font-weight: bold;
+}
+
+.lastUpdated {
+    text-align: center;
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 2px dashed var(--neo-black);
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .header {
+        padding: 1.5rem;
+    }
+
+    .title {
+        font-size: 1.5rem;
+    }
+
+    .section {
+        padding: 1.5rem;
+    }
+}

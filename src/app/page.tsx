@@ -142,6 +142,16 @@ export default function HomePage() {
                     </div>
                 </div>
             </section>
+
+            {/* Footer */}
+            <footer className={styles.footer}>
+                <div className={styles.footerLinks}>
+                    <p>© 2026 DevTools. Open Source.</p>
+                    <Link href="/policy" className={styles.policyLink}>
+                        Privacy & Terms
+                    </Link>
+                </div>
+            </footer>
         </div>
     );
 }
