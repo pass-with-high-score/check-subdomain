@@ -20,4 +20,5 @@ jobs:
             cd check-subdomain
             git reset --hard origin/main
             git pull origin main
+            chmod +x deploy.sh
             ./deploy.sh
