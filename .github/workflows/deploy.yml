@@ -18,4 +18,6 @@ jobs:
           port: ${{ secrets.VPS_PORT }}
           script: |
             cd check-subdomain
+            git reset --hard origin/main
+            git pull origin main
             ./deploy.sh
