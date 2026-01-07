@@ -10,13 +10,15 @@ import StateList from './components/StateList';
 import StateEditorModal from './components/StateEditorModal';
 import MetadataEditorModal from './components/MetadataEditorModal';
 import AnimationPreview from './components/AnimationPreview';
-import { UploadIcon, DownloadIcon, SettingsIcon } from '@/components/Icons';
+import MobileSimulator from './components/MobileSimulator';
+import { UploadIcon, DownloadIcon, SettingsIcon, SmartphoneIcon } from '@/components/Icons';
 import styles from './page.module.css';
 
 function SkinBuilderContent() {
     const { state, setMetadata, setSkinData, reset } = useSkinBuilder();
     const [editingStateId, setEditingStateId] = useState<string | null>(null);
     const [showSettingsModal, setShowSettingsModal] = useState(false);
+    const [showSimulator, setShowSimulator] = useState(false);
     const [isImporting, setIsImporting] = useState(false);
     const [isExporting, setIsExporting] = useState(false);
     const importInputRef = useRef<HTMLInputElement>(null);
@@ -106,6 +108,13 @@ function SkinBuilderContent() {
                         <SettingsIcon size={16} />
                         Advanced
                     </button>
+                    <button
+                        className={`${styles.btn} ${styles.btnSecondary}`}
+                        onClick={() => setShowSimulator(true)}
+                    >
+                        <SmartphoneIcon size={16} />
+                        Simulate
+                    </button>
                 </div>
             </header>
 
@@ -171,6 +180,10 @@ function SkinBuilderContent() {
 
             {showSettingsModal && (
                 <MetadataEditorModal onClose={() => setShowSettingsModal(false)} />
+            )}
+
+            {showSimulator && (
+                <MobileSimulator onClose={() => setShowSimulator(false)} />
             )}
         </div>
     );
