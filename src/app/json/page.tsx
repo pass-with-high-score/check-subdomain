@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Navigation from '@/components/Navigation';
 import Toast, { useToast } from '@/components/Toast';
-import { CopyIcon, CheckIcon, CodeIcon, LinkIcon, ClockIcon, TrashIcon, ExternalLinkIcon, RefreshIcon, UploadIcon, SpinnerIcon } from '@/components/Icons';
+import { CopyIcon, CheckIcon, CodeIcon, LinkIcon, ClockIcon, TrashIcon, ExternalLinkIcon, RefreshIcon, DownloadIcon, SpinnerIcon } from '@/components/Icons';
 import styles from './page.module.css';
 
 const STORAGE_KEY = 'json-bins-history';
@@ -384,7 +384,7 @@ function JsonServerContent() {
                                 className={styles.toolButton}
                                 title="Import JSON file"
                             >
-                                <UploadIcon size={16} style={{ marginRight: '6px' }} />
+                                <DownloadIcon size={16} style={{ marginRight: '6px' }} />
                                 Import
                             </button>
                             <button
