@@ -206,8 +206,9 @@ export default function YouTubePage() {
                     formatType,
                     quality: selectedQuality,
                     outputFormat,
-                    startTime: startTime || undefined,
-                    endTime: endTime || undefined,
+                    // Only send clip params if user actually changed from default (full video)
+                    startTime: startTime && parseTimeToSeconds(startTime) > 0 ? startTime : undefined,
+                    endTime: endTime && videoInfo && parseTimeToSeconds(endTime) < videoInfo.duration ? endTime : undefined,
                 }),
             });
 
