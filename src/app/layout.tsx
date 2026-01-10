@@ -11,7 +11,7 @@ const lexendMega = Lexend_Mega({
 
 const siteConfig = {
   name: "DevTools",
-  description: "Free online tools for developers. Subdomain Scanner, OTP Generator, Base64 Image converter. No signup required, 100% client-side processing.",
+  description: "Free online developer tools: Subdomain Scanner, OTP Generator, Base64 Converter, JSON Server, Webhook Tester, Image Uploader, File Transfer, Time Capsule, ANeko Builder, and Community Chat. No signup required.",
   url: process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000",
 };
 
@@ -27,12 +27,17 @@ export const metadata: Metadata = {
     "subdomain scanner",
     "subdomain finder",
     "OTP generator",
-    "TOTP",
-    "base64 image",
-    "base64 converter",
+    "TOTP authenticator",
+    "base64 image converter",
+    "JSON mock API",
+    "webhook tester",
+    "image uploader",
+    "file transfer",
+    "file sharing",
+    "time capsule",
+    "ANeko skin builder",
     "free online tools",
-    "security tools",
-    "cloudflare detector",
+    "privacy tools",
   ],
   authors: [{ name: "DevTools Team" }],
   creator: "DevTools",
@@ -71,8 +76,8 @@ export const metadata: Metadata = {
     images: ["/og-image.png"],
   },
   icons: {
-    icon: "/favicon.ico",
-    apple: "/apple-touch-icon.png",
+    icon: "/favicon.svg",
+    apple: "/apple-icon.svg",
   },
 };
 

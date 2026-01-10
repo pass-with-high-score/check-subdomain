@@ -42,7 +42,6 @@ function saveUser(user: UserInfo) {
 }
 
 export default function ChatWidget() {
-    const [isOpen, setIsOpen] = useState(false);
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [inputValue, setInputValue] = useState('');
     const [onlineCount, setOnlineCount] = useState(0);
@@ -57,8 +56,6 @@ export default function ChatWidget() {
     }, []);
 
     useEffect(() => {
-        if (!isOpen) return;
-
         const savedUser = loadSavedUser();
 
         const socket = io(`${BACKEND_URL}/chat`, {
@@ -78,7 +75,7 @@ export default function ChatWidget() {
 
         socket.on('userInfo', (info: UserInfo) => {
             setUserInfo(info);
-            saveUser(info); // Save to localStorage
+            saveUser(info);
         });
 
         socket.on('messageHistory', (history: ChatMessage[]) => {
@@ -95,7 +92,6 @@ export default function ChatWidget() {
 
         socket.on('rateLimited', (data: { seconds: number }) => {
             setRateLimitSeconds(data.seconds);
-            // Countdown timer
             const timer = setInterval(() => {
                 setRateLimitSeconds(prev => {
                     if (prev <= 1) {
@@ -111,7 +107,7 @@ export default function ChatWidget() {
             socket.disconnect();
             socketRef.current = null;
         };
-    }, [isOpen]);
+    }, []);
 
     useEffect(() => {
         scrollToBottom();
@@ -141,124 +137,104 @@ export default function ChatWidget() {
 
     const rerandomUsername = () => {
         if (!socketRef.current) return;
-        // Clear saved user and request new one
         localStorage.removeItem(STORAGE_KEY);
         socketRef.current.emit('rerandomUsername');
     };
 
     return (
-        <>
-            {/* Chat Toggle Button */}
-            <button
-                className={`${styles.toggleButton} ${isOpen ? styles.open : ''}`}
-                onClick={() => setIsOpen(!isOpen)}
-                aria-label="Toggle chat"
-            >
-                {isOpen ? (
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <line x1="18" y1="6" x2="6" y2="18" />
-                        <line x1="6" y1="6" x2="18" y2="18" />
-                    </svg>
-                ) : (
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                    </svg>
-                )}
-                {!isOpen && onlineCount > 0 && (
-                    <span className={styles.badge}>{onlineCount}</span>
-                )}
-            </button>
-
-            {/* Chat Window */}
-            {isOpen && (
-                <div className={styles.chatWindow}>
-                    <div className={styles.header}>
-                        <div className={styles.headerInfo}>
-                            <span className={styles.title}>Anonymous Chat</span>
-                            <span className={styles.status}>
-                                <span className={`${styles.statusDot} ${isConnected ? styles.connected : ''}`} />
-                                {onlineCount} online
+        <div className={styles.chatSection}>
+            <div className={styles.chatCard}>
+                <div className={styles.header}>
+                    <div className={styles.headerInfo}>
+                        <span className={styles.title}>Community Chat</span>
+                        <span className={styles.status}>
+                            <span className={`${styles.statusDot} ${isConnected ? styles.connected : ''}`} />
+                            {onlineCount} online
+                        </span>
+                    </div>
+                    {userInfo && (
+                        <div className={styles.userRow}>
+                            <span className={styles.username} style={{ color: userInfo.color }}>
+                                You: {userInfo.username}
                             </span>
+                            <button
+                                className={styles.rerandomBtn}
+                                onClick={rerandomUsername}
+                                title="Get new random name"
+                            >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                    <path d="M23 4v6h-6" />
+                                    <path d="M1 20v-6h6" />
+                                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+                                </svg>
+                            </button>
                         </div>
-                        {userInfo && (
-                            <div className={styles.userRow}>
-                                <span className={styles.username} style={{ color: userInfo.color }}>
-                                    You: {userInfo.username}
-                                </span>
-                                <button
-                                    className={styles.rerandomBtn}
-                                    onClick={rerandomUsername}
-                                    title="Get new random name"
-                                >
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                                        <path d="M23 4v6h-6" />
-                                        <path d="M1 20v-6h6" />
-                                        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
-                                    </svg>
-                                </button>
-                            </div>
-                        )}
-                    </div>
-
-                    <div className={styles.messages}>
-                        {messages.length === 0 ? (
-                            <div className={styles.emptyState}>
-                                <p>No messages yet</p>
-                                <p className={styles.emptyHint}>Be the first to say hi! 👋</p>
-                            </div>
-                        ) : (
-                            messages.map((msg) => (
-                                <div
-                                    key={msg.id}
-                                    className={`${styles.message} ${msg.username === userInfo?.username ? styles.own : ''}`}
-                                >
-                                    <div className={styles.messageHeader}>
-                                        <span className={styles.messageUser} style={{ color: msg.color }}>
-                                            {msg.username}
-                                        </span>
-                                        <span className={styles.messageTime}>
-                                            {formatTime(msg.timestamp)}
-                                        </span>
-                                    </div>
-                                    <div className={styles.messageContent}>{msg.message}</div>
-                                </div>
-                            ))
-                        )}
-                        <div ref={messagesEndRef} />
-                    </div>
-
-                    <div className={styles.inputArea}>
-                        {rateLimitSeconds > 0 ? (
-                            <div className={styles.rateLimitWarning}>
-                                Slow down! Wait {rateLimitSeconds}s...
-                            </div>
-                        ) : (
-                            <>
-                                <input
-                                    type="text"
-                                    value={inputValue}
-                                    onChange={(e) => setInputValue(e.target.value)}
-                                    onKeyPress={handleKeyPress}
-                                    placeholder="Type a message..."
-                                    maxLength={500}
-                                    disabled={!isConnected}
-                                    className={styles.input}
-                                />
-                                <button
-                                    onClick={sendMessage}
-                                    disabled={!inputValue.trim() || !isConnected}
-                                    className={styles.sendButton}
-                                >
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                        <line x1="22" y1="2" x2="11" y2="13" />
-                                        <polygon points="22 2 15 22 11 13 2 9 22 2" />
-                                    </svg>
-                                </button>
-                            </>
-                        )}
-                    </div>
+                    )}
                 </div>
-            )}
-        </>
+
+                <div className={styles.messages}>
+                    {!isConnected ? (
+                        <div className={styles.connectingState}>
+                            <div className={styles.spinner} />
+                            <p>Connecting...</p>
+                        </div>
+                    ) : messages.length === 0 ? (
+                        <div className={styles.emptyState}>
+                            <p>No messages yet</p>
+                            <p className={styles.emptyHint}>Be the first to say hi!</p>
+                        </div>
+                    ) : (
+                        messages.map((msg) => (
+                            <div
+                                key={msg.id}
+                                className={`${styles.message} ${msg.username === userInfo?.username ? styles.own : ''}`}
+                            >
+                                <div className={styles.messageHeader}>
+                                    <span className={styles.messageUser} style={{ color: msg.color }}>
+                                        {msg.username}
+                                    </span>
+                                    <span className={styles.messageTime}>
+                                        {formatTime(msg.timestamp)}
+                                    </span>
+                                </div>
+                                <div className={styles.messageContent}>{msg.message}</div>
+                            </div>
+                        ))
+                    )}
+                    <div ref={messagesEndRef} />
+                </div>
+
+                <div className={styles.inputArea}>
+                    {rateLimitSeconds > 0 ? (
+                        <div className={styles.rateLimitWarning}>
+                            Slow down! Wait {rateLimitSeconds}s...
+                        </div>
+                    ) : (
+                        <>
+                            <input
+                                type="text"
+                                value={inputValue}
+                                onChange={(e) => setInputValue(e.target.value)}
+                                onKeyPress={handleKeyPress}
+                                placeholder="Type a message..."
+                                maxLength={500}
+                                disabled={!isConnected}
+                                className={styles.input}
+                            />
+                            <button
+                                onClick={sendMessage}
+                                disabled={!inputValue.trim() || !isConnected}
+                                className={styles.sendButton}
+                            >
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <line x1="22" y1="2" x2="11" y2="13" />
+                                    <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                                </svg>
+                            </button>
+                        </>
+                    )}
+                </div>
+            </div>
+        </div>
     );
 }

@@ -89,9 +89,6 @@ export default function HomePage() {
             {/* Background */}
             <div className={styles.backgroundGradient}></div>
 
-            {/* Chat Widget */}
-            <ChatWidget />
-
             {/* Hero Section */}
             <header className={styles.hero}>
                 <div className={styles.heroContent}>
@@ -174,6 +171,13 @@ export default function HomePage() {
                         </div>
                     </div>
                 </div>
+            </section>
+
+            {/* Chat Section */}
+            <section className={styles.chatSection}>
+                <h2 className={styles.chatSectionTitle}>Community Chat</h2>
+                <p className={styles.chatSectionSubtitle}>Say hi to other developers!</p>
+                <ChatWidget />
             </section>
 
             {/* Footer */}

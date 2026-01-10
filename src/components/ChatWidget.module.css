@@ -1,80 +1,18 @@
-/* Chat Widget - Neo-Brutalism Style */
+/* Chat Section - Neo-Brutalism Embedded Style */
 
-.toggleButton {
-    position: fixed;
-    bottom: 100px;
-    right: 2rem;
-    width: 60px;
-    height: 60px;
-    background: var(--neo-cyan);
-    border: 4px solid var(--neo-black);
-    box-shadow: 6px 6px 0px var(--neo-black);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.15s ease;
-    z-index: 1000;
-    color: var(--neo-black);
+.chatSection {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
 }
 
-.toggleButton:hover {
-    transform: translate(-3px, -3px);
-    box-shadow: 9px 9px 0px var(--neo-black);
-}
-
-.toggleButton:active {
-    transform: translate(2px, 2px);
-    box-shadow: 2px 2px 0px var(--neo-black);
-}
-
-.toggleButton.open {
-    background: var(--neo-pink);
-}
-
-.badge {
-    position: absolute;
-    top: -8px;
-    right: -8px;
-    background: var(--neo-red);
-    color: var(--neo-white);
-    font-family: 'Lexend Mega', sans-serif;
-    font-size: 11px;
-    font-weight: 700;
-    padding: 2px 8px;
-    border: 3px solid var(--neo-black);
-    min-width: 20px;
-    text-align: center;
-}
-
-.chatWindow {
-    position: fixed;
-    bottom: 176px;
-    right: 2rem;
-    width: 380px;
-    max-width: calc(100vw - 4rem);
-    height: 500px;
-    max-height: calc(100vh - 200px);
+.chatCard {
     background: var(--neo-white);
     border: 4px solid var(--neo-black);
     box-shadow: 12px 12px 0px var(--neo-black);
     display: flex;
     flex-direction: column;
-    overflow: hidden;
-    z-index: 999;
-    animation: slideUp 0.15s ease;
-}
-
-@keyframes slideUp {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+    height: 450px;
 }
 
 .header {
@@ -119,16 +57,15 @@
     background: var(--neo-green);
 }
 
-.username {
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--neo-cyan);
-}
-
 .userRow {
     display: flex;
     align-items: center;
     gap: 8px;
+}
+
+.username {
+    font-size: 12px;
+    font-weight: 600;
 }
 
 .rerandomBtn {
@@ -309,20 +246,39 @@
     text-transform: uppercase;
 }
 
-@media (max-width: 480px) {
-    .toggleButton {
-        bottom: 90px;
-        right: 1.5rem;
-        width: 54px;
-        height: 54px;
+/* Connecting state */
+.connectingState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--text-muted);
+    text-align: center;
+    gap: 12px;
+}
+
+.spinner {
+    width: 32px;
+    height: 32px;
+    border: 4px solid var(--neo-black);
+    border-top-color: var(--neo-cyan);
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@media (max-width: 640px) {
+    .chatSection {
+        padding: 0 1rem;
     }
 
-    .chatWindow {
-        bottom: 160px;
-        right: 1rem;
-        left: 1rem;
-        width: auto;
-        height: 50vh;
+    .chatCard {
+        height: 380px;
         box-shadow: 8px 8px 0px var(--neo-black);
     }
 
@@ -336,5 +292,9 @@
 
     .inputArea {
         padding: 0.75rem;
+    }
+
+    .message {
+        max-width: 90%;
     }
 }

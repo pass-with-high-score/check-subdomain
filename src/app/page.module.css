@@ -238,6 +238,27 @@
     line-height: 1.5;
 }
 
+/* Chat Section */
+.chatSection {
+    padding: 3rem 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.chatSectionTitle {
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 1.5rem;
+    text-transform: uppercase;
+    text-align: center;
+    margin-bottom: 0.5rem;
+}
+
+.chatSectionSubtitle {
+    text-align: center;
+    color: var(--text-muted);
+    margin-bottom: 2rem;
+}
+
 /* Footer */
 .footer {
     padding: 3rem 2rem;
