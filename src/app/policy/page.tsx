@@ -46,6 +46,7 @@ export default function PolicyPage() {
                         <li><strong>Time Capsule:</strong> Files and messages are encrypted and stored on our servers until the unlock date. After unlocking, data may be deleted after a period of inactivity.</li>
                         <li><strong>ANeko Builder:</strong> All skin editing happens 100% locally in your browser. We do not upload or store any of your skin files.</li>
                         <li><strong>Anonymous Chat:</strong> Messages are stored in our database and kept for a limited time. Random usernames are generated and saved in your browser for session continuity. Chat is public and visible to all users.</li>
+                        <li><strong>Speech to Text:</strong> Audio files you upload are temporarily stored on our servers for transcription using Deepgram API. Audio and transcripts are automatically deleted after 1 hour. We do not use your audio for any other purpose.</li>
                     </ul>
 
                     <h3>2. Analytics</h3>

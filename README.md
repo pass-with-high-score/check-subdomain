@@ -16,6 +16,7 @@ Free online developer tools. No signup required, 100% client-side processing for
 | **Image Uploader** | Upload images and get shareable links | S3/R2 |
 | **File Transfer** | Share any file with expiring download links | S3/R2 |
 | **Time Capsule** | Lock files until a future date | S3/R2 |
+| **Speech to Text** | Transcribe audio with word-level timestamps and seek | Server (Deepgram) |
 | **ANeko Builder** | Create custom skins for ANeko Reborn Android app | Client-side |
 | **Anonymous Chat** | Real-time public chat with random usernames | PostgreSQL |
 
@@ -108,6 +109,9 @@ S3_ENDPOINT=
 S3_ACCESS_KEY=
 S3_SECRET_KEY=
 S3_BUCKET=
+
+# Deepgram API Key (for Speech to Text)
+DEEPGRAM_API_KEY=
 
 # Server Port
 PORT=3001
