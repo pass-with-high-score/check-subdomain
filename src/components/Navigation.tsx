@@ -14,6 +14,7 @@ import {
     CodeIcon,
     HourglassIcon,
     ChevronDownIcon,
+    UploadIcon,
 } from './Icons';
 import styles from './Navigation.module.css';
 
@@ -29,6 +30,7 @@ const coreTools: NavItem[] = [
     { href: '/otp', label: 'OTP', icon: <KeyIcon size={18} /> },
     { href: '/webhook', label: 'Webhook', icon: <LinkIcon size={18} /> },
     { href: '/json', label: 'JSON', icon: <CodeIcon size={18} /> },
+    { href: '/upload', label: 'Upload', icon: <UploadIcon size={18} /> },
 ];
 
 // More tools - in dropdown on desktop, visible on mobile menu

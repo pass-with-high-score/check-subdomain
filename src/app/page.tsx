@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { SearchIcon, KeyIcon, ImageIcon, BoltIcon, ShieldIcon, SmartphoneIcon, GithubIcon, LinkIcon, CodeIcon, HourglassIcon } from '@/components/Icons';
+import { SearchIcon, KeyIcon, ImageIcon, BoltIcon, ShieldIcon, SmartphoneIcon, GithubIcon, LinkIcon, CodeIcon, HourglassIcon, UploadIcon } from '@/components/Icons';
 import styles from './page.module.css';
 
 // Note: metadata must be exported from a server component
@@ -53,6 +53,13 @@ const tools: Tool[] = [
         color: 'orange',
     },
     {
+        href: '/upload',
+        title: 'Image Uploader',
+        description: 'Upload images and get shareable links. Drag & drop or paste from clipboard.',
+        icon: <UploadIcon size={32} />,
+        color: 'cyan',
+    },
+    {
         href: '/capsule',
         title: 'Time Capsule',
         description: 'Upload files and lock them for a set time. Download only after the unlock date.',
@@ -64,7 +71,7 @@ const tools: Tool[] = [
         title: 'ANeko Builder',
         description: 'Create custom skins for ANeko Reborn Android pet app with visual animation editor.',
         icon: <Image src="/aneko.png" alt="ANeko" width={32} height={32} style={{ imageRendering: 'smooth' }} />,
-        color: 'cyan',
+        color: 'yellow',
     },
 ];
 

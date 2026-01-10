@@ -81,6 +81,56 @@ export async function deleteObject(objectKey: string): Promise<void> {
 }
 
 /**
+ * Upload a file directly to R2
+ * @param objectKey - The object key (path) in the bucket
+ * @param body - The file content
+ * @param contentType - MIME type of the file
+ */
+export async function uploadObject(
+    objectKey: string,
+    body: Buffer | Uint8Array,
+    contentType: string
+): Promise<void> {
+    const command = new PutObjectCommand({
+        Bucket: bucket,
+        Key: objectKey,
+        Body: body,
+        ContentType: contentType,
+    });
+
+    await r2Client.send(command);
+}
+
+/**
+ * Get public URL for an object
+ * @param objectKey - The object key (path) in the bucket
+ * @returns Public URL
+ */
+export function getPublicUrl(objectKey: string): string {
+    // Use custom domain based on prefix
+    if (objectKey.startsWith('uploads/')) {
+        const imageUrl = process.env.IMAGE_PUBLIC_URL;
+        if (imageUrl) {
+            return `${imageUrl}/${objectKey}`;
+        }
+    }
+
+    if (objectKey.startsWith('capsules/')) {
+        const capsuleUrl = process.env.CAPSULE_PUBLIC_URL;
+        if (capsuleUrl) {
+            return `${capsuleUrl}/${objectKey}`;
+        }
+    }
+
+    // Fallback to default S3_PUBLIC_URL
+    const publicUrl = process.env.S3_PUBLIC_URL;
+    if (!publicUrl) {
+        throw new Error('S3_PUBLIC_URL not configured');
+    }
+    return `${publicUrl}/${objectKey}`;
+}
+
+/**
  * Get configuration values
  */
 export function getR2Config() {

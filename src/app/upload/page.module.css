@@ -1,0 +1,344 @@
+/* Image Uploader Page Styles */
+
+.container {
+    min-height: 100vh;
+    padding: 2rem 1rem;
+    position: relative;
+}
+
+.backgroundGradient {
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(135deg, #f0f9ff 0%, #fdf4ff 50%, #fff7ed 100%);
+    z-index: -1;
+}
+
+/* Header */
+.header {
+    max-width: 800px;
+    margin: 0 auto 2rem;
+    text-align: center;
+}
+
+.logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.logoIcon {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--neo-cyan);
+    border: 4px solid var(--neo-black);
+    box-shadow: 4px 4px 0 var(--neo-black);
+    color: var(--neo-black);
+}
+
+.logo h1 {
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 1.75rem;
+    font-weight: 900;
+    color: var(--neo-black);
+    margin: 0;
+}
+
+.tagline {
+    font-size: 1rem;
+    color: #475569;
+    margin: 0;
+}
+
+/* Main */
+.main {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+/* Upload Zone */
+.uploadZone {
+    padding: 3rem 2rem;
+    background: var(--neo-white);
+    border: 4px dashed var(--neo-black);
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    margin-bottom: 2rem;
+}
+
+.uploadZone:hover {
+    background: var(--neo-yellow);
+    border-style: solid;
+    box-shadow: 6px 6px 0 var(--neo-black);
+}
+
+.uploadZone.dragOver {
+    background: var(--neo-green);
+    border-style: solid;
+    box-shadow: 6px 6px 0 var(--neo-black);
+    transform: scale(1.02);
+}
+
+.uploadZone.uploading {
+    background: var(--neo-cyan);
+    border-style: solid;
+    pointer-events: none;
+}
+
+.fileInput {
+    display: none;
+}
+
+.uploadPrompt {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.uploadIconLarge {
+    width: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--neo-cyan);
+    border: 4px solid var(--neo-black);
+    box-shadow: 4px 4px 0 var(--neo-black);
+    margin-bottom: 0.5rem;
+}
+
+.uploadText {
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.uploadHint {
+    font-size: 0.9rem;
+    color: #475569;
+    margin: 0;
+}
+
+.uploadLimit {
+    font-size: 0.8rem;
+    color: #64748b;
+    margin: 0;
+    margin-top: 0.5rem;
+}
+
+.uploadingState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.uploadingState p {
+    font-family: 'Lexend Mega', sans-serif;
+    font-weight: 700;
+    margin: 0;
+}
+
+.spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid var(--neo-black);
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* History Section */
+.historySection {
+    background: var(--neo-white);
+    border: 4px solid var(--neo-black);
+    box-shadow: 6px 6px 0 var(--neo-black);
+    margin-bottom: 2rem;
+}
+
+.historyHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.25rem;
+    background: var(--neo-black);
+    color: var(--neo-white);
+}
+
+.historyHeader h2 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin: 0;
+}
+
+.clearButton {
+    padding: 0.4rem 0.75rem;
+    background: var(--neo-white);
+    color: var(--neo-black);
+    border: 2px solid var(--neo-black);
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.1s ease;
+}
+
+.clearButton:hover {
+    background: var(--neo-red);
+    color: var(--neo-white);
+}
+
+/* Upload List */
+.uploadList {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.uploadItem {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem 1rem;
+    border-bottom: 2px solid var(--neo-black);
+    transition: background 0.1s ease;
+}
+
+.uploadItem:last-child {
+    border-bottom: none;
+}
+
+.uploadItem:hover {
+    background: #f8fafc;
+}
+
+.uploadPreview {
+    width: 48px;
+    height: 48px;
+    flex-shrink: 0;
+    background: #f1f5f9;
+    border: 2px solid var(--neo-black);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.uploadPreview img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: cover;
+}
+
+.uploadInfo {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.uploadFilename {
+    font-weight: 600;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.uploadSize {
+    font-size: 0.75rem;
+    color: #64748b;
+}
+
+.uploadActions {
+    display: flex;
+    gap: 0.375rem;
+    flex-shrink: 0;
+}
+
+.actionButton {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--neo-white);
+    border: 2px solid var(--neo-black);
+    color: var(--neo-black);
+    cursor: pointer;
+    transition: all 0.1s ease;
+    text-decoration: none;
+}
+
+.actionButton:hover {
+    background: var(--neo-yellow);
+    box-shadow: 2px 2px 0 var(--neo-black);
+}
+
+.deleteButton:hover {
+    background: var(--neo-red);
+    color: var(--neo-white);
+}
+
+/* Features */
+.features {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+}
+
+@media (max-width: 640px) {
+    .features {
+        grid-template-columns: 1fr;
+    }
+}
+
+.feature {
+    padding: 1.5rem;
+    background: var(--neo-white);
+    border: 4px solid var(--neo-black);
+    box-shadow: 4px 4px 0 var(--neo-black);
+    text-align: center;
+}
+
+.featureIcon {
+    width: 48px;
+    height: 48px;
+    margin: 0 auto 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--neo-yellow);
+    border: 3px solid var(--neo-black);
+}
+
+.feature h4 {
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 700;
+    margin: 0 0 0.25rem;
+}
+
+.feature p {
+    font-size: 0.8rem;
+    color: #475569;
+    margin: 0;
+}
