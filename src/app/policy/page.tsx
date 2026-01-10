@@ -45,12 +45,17 @@ export default function PolicyPage() {
                         <li><strong>File Transfer:</strong> Files you upload are stored temporarily on our servers to provide download links. Files are automatically deleted after the expiration time you set.</li>
                         <li><strong>Time Capsule:</strong> Files and messages are encrypted and stored on our servers until the unlock date. After unlocking, data may be deleted after a period of inactivity.</li>
                         <li><strong>ANeko Builder:</strong> All skin editing happens 100% locally in your browser. We do not upload or store any of your skin files.</li>
-                        <li><strong>Anonymous Chat:</strong> Messages are stored temporarily in server memory and automatically cleared. No chat history is permanently saved. Random usernames are generated for each session.</li>
+                        <li><strong>Anonymous Chat:</strong> Messages are stored in our database and kept for a limited time. Random usernames are generated and saved in your browser for session continuity. Chat is public and visible to all users.</li>
                     </ul>
 
-                    <h3>2. Local Storage</h3>
+                    <h3>2. Analytics</h3>
                     <p>
-                        We use your browser's Local Storage to save your preferences and history for your convenience (e.g., saved OTP keys, recent JSON bins). You can clear this at any time by clearing your browser cache.
+                        We use Google Analytics to understand how visitors use our website. This helps us improve the user experience. Google Analytics collects anonymized data such as pages visited, time spent, and general location. No personally identifiable information is collected.
+                    </p>
+
+                    <h3>3. Local Storage</h3>
+                    <p>
+                        We use your browser's Local Storage to save your preferences and history for your convenience (e.g., saved OTP keys, chat username, recent JSON bins). You can clear this at any time by clearing your browser cache.
                     </p>
                 </section>
 

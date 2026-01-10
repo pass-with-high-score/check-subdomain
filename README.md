@@ -17,6 +17,7 @@ Free online developer tools. No signup required, 100% client-side processing for
 | **File Transfer** | Share any file with expiring download links | S3/R2 |
 | **Time Capsule** | Lock files until a future date | S3/R2 |
 | **ANeko Builder** | Create custom skins for ANeko Reborn Android app | Client-side |
+| **Anonymous Chat** | Real-time public chat with random usernames | PostgreSQL |
 
 ## Project Structure
 
@@ -24,15 +25,14 @@ Free online developer tools. No signup required, 100% client-side processing for
 devtool-fe/
 ├── src/                    # Next.js frontend
 │   ├── app/               # App router pages
-│   ├── components/        # React components
+│   ├── components/        # React components (incl. ChatWidget)
 │   └── lib/               # Utilities
 ├── backend/               # NestJS backend API
 │   └── src/
-│       ├── checkdomain/   # Subdomain scanner cron
-│       ├── upload/        # Image upload service
-│       ├── transfer/      # File transfer service
-│       └── capsule/       # Time capsule service
-└── prisma/                # Database schema
+│       ├── chat/          # WebSocket chat gateway
+│       ├── cleanup/       # Scheduled cleanup tasks
+│       ├── database/      # Database service
+│       └── storage/       # S3/R2 storage service
 ```
 
 ## Quick Start
