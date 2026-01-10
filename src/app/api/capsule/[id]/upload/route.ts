@@ -99,9 +99,6 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     }
 }
 
-// Increase body size limit for file uploads
-export const config = {
-    api: {
-        bodyParser: false,
-    },
-};
+// Route segment config for App Router
+export const runtime = 'nodejs';
+export const maxDuration = 60; // 60 seconds timeout for large uploads
