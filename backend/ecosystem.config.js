@@ -10,6 +10,8 @@ module.exports = {
             env: {
                 NODE_ENV: 'production',
                 PORT: 3010,
+                // Add local bin to PATH for yt-dlp
+                PATH: `${process.env.HOME}/.local/bin:${process.env.HOME}/.bun/bin:/usr/local/bin:/usr/bin:/bin`,
             },
         },
     ],

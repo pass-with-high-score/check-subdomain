@@ -76,12 +76,25 @@ export class YouTubeService implements OnModuleInit {
     }
 
     private checkYtDlp() {
-        try {
-            const version = execSync(`${this.ytdlpPath} --version`, { encoding: 'utf-8' }).trim();
-            this.logger.log(`📺 yt-dlp version: ${version}`);
-        } catch {
-            this.logger.warn('⚠️ yt-dlp not found. Please install it: brew install yt-dlp');
+        // Try common paths for yt-dlp
+        const possiblePaths = [
+            'yt-dlp',  // In PATH
+            `${process.env.HOME}/.local/bin/yt-dlp`,  // pip user install
+            '/usr/local/bin/yt-dlp',  // Homebrew/manual install
+            '/usr/bin/yt-dlp',  // apt install
+        ];
+
+        for (const ytPath of possiblePaths) {
+            try {
+                const version = execSync(`${ytPath} --version`, { encoding: 'utf-8' }).trim();
+                this.ytdlpPath = ytPath;
+                this.logger.log(`📺 yt-dlp found at ${ytPath}, version: ${version}`);
+                return;
+            } catch {
+                // Try next path
+            }
         }
+        this.logger.warn('⚠️ yt-dlp not found. YouTube downloads will not work.');
     }
 
     private checkCookies() {
