@@ -195,6 +195,103 @@
     margin-bottom: 1rem;
 }
 
+/* Format Selector Dropdown */
+.formatSelector {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    padding: 0.75rem 1rem;
+    background: var(--bg-primary);
+    border: 3px solid var(--neo-black);
+}
+
+.formatSelector label {
+    font-family: 'Lexend Mega', sans-serif;
+    font-weight: 700;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.formatSelect {
+    flex: 1;
+    padding: 0.5rem 0.75rem;
+    background: var(--neo-white);
+    border: 2px solid var(--neo-black);
+    font-family: inherit;
+    font-size: 0.9rem;
+    cursor: pointer;
+    outline: none;
+}
+
+.formatSelect:focus {
+    box-shadow: 3px 3px 0px var(--neo-black);
+}
+
+.formatSelect:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Clip Time Selector */
+.clipSelector {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    padding: 0.75rem 1rem;
+    background: var(--neo-yellow);
+    border: 3px solid var(--neo-black);
+}
+
+.clipSelector label {
+    font-family: 'Lexend Mega', sans-serif;
+    font-weight: 700;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.clipInputs {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 1;
+}
+
+.clipInputs span {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.clipInput {
+    width: 90px;
+    padding: 0.4rem 0.6rem;
+    background: var(--neo-white);
+    border: 2px solid var(--neo-black);
+    font-family: inherit;
+    font-size: 0.85rem;
+    text-align: center;
+    outline: none;
+}
+
+.clipInput:focus {
+    box-shadow: 2px 2px 0px var(--neo-black);
+}
+
+.clipInput:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.clipWarning {
+    font-size: 0.7rem;
+    color: var(--neo-red);
+    font-weight: 600;
+    margin-top: 0.25rem;
+}
+
 .qualityBtn {
     display: flex;
     flex-direction: column;
@@ -369,6 +466,123 @@
     to {
         transform: rotate(360deg);
     }
+}
+
+/* Download History Section */
+.historySection {
+    margin-bottom: 2rem;
+}
+
+.historyTitle {
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    margin: 0 0 0.25rem 0;
+}
+
+.historySubtitle {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin: 0 0 1rem 0;
+}
+
+.historyList {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.historyItem {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: var(--neo-white);
+    border: 3px solid var(--neo-black);
+    padding: 0.75rem;
+}
+
+.historyThumbnail {
+    width: 80px;
+    height: 45px;
+    flex-shrink: 0;
+    background: var(--neo-black);
+    overflow: hidden;
+}
+
+.historyThumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.historyInfo {
+    flex: 1;
+    min-width: 0;
+}
+
+.historyItemTitle {
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 700;
+    margin: 0 0 0.25rem 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.historyMeta {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+}
+
+.historyTimer {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    color: var(--neo-red);
+    font-weight: 600;
+}
+
+.historyActions {
+    display: flex;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
+.historyDownloadBtn,
+.historyShareBtn,
+.historyDeleteBtn {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--neo-black);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    font-size: 0.9rem;
+}
+
+.historyDownloadBtn {
+    background: var(--neo-green);
+}
+
+.historyShareBtn {
+    background: var(--neo-blue);
+}
+
+.historyDeleteBtn {
+    background: var(--neo-red);
+    color: var(--neo-white);
+}
+
+.historyDownloadBtn:hover,
+.historyShareBtn:hover,
+.historyDeleteBtn:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 2px 2px 0px var(--neo-black);
 }
 
 /* Features */

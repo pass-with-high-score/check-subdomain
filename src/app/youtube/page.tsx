@@ -1,17 +1,31 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Navigation from '@/components/Navigation';
 import Toast, { useToast } from '@/components/Toast';
-import { PlayIcon, MusicIcon, DownloadIcon, SearchIcon, ClockIcon } from '@/components/Icons';
+import { PlayIcon, MusicIcon, DownloadIcon, SearchIcon, ClockIcon, CopyIcon, XIcon } from '@/components/Icons';
 import styles from './page.module.css';
 
 const API_BASE = process.env.NEXT_PUBLIC_CHAT_URL || 'http://localhost:3001';
+const STORAGE_KEY = 'youtube_downloads_history';
+const EXPIRATION_MS = 60 * 60 * 1000; // 1 hour
+
+interface DownloadHistoryItem {
+    id: string;
+    title: string;
+    thumbnail: string;
+    format: string;
+    quality: string;
+    downloadUrl: string;
+    fileSize: number;
+    createdAt: number; // timestamp
+    expiresAt: number; // timestamp
+}
 
 interface FormatOption {
     quality: string;
-    size: number | null;
-    itag: number;
+    value: string;
+    filesize?: number;
 }
 
 interface VideoInfo {
@@ -28,13 +42,28 @@ interface DownloadResult {
     id: string;
     videoId: string;
     title: string;
-    status: 'pending' | 'processing' | 'completed' | 'failed';
+    status: 'pending' | 'queued' | 'processing' | 'completed' | 'failed';
     progress?: number;
     downloadUrl?: string;
     fileSize?: number;
     filename?: string;
     error?: string;
+    queuePosition?: number;
 }
+
+const VIDEO_FORMATS = [
+    { value: 'mp4', label: 'MP4 (H.264)', desc: 'Best compatibility' },
+    { value: 'webm', label: 'WebM (VP9)', desc: 'Smaller size' },
+    { value: 'mkv', label: 'MKV', desc: 'Lossless container' },
+];
+
+const AUDIO_FORMATS = [
+    { value: 'mp3', label: 'MP3', desc: 'Universal' },
+    { value: 'm4a', label: 'M4A (AAC)', desc: 'Apple devices' },
+    { value: 'opus', label: 'Opus', desc: 'Best quality/size' },
+    { value: 'flac', label: 'FLAC', desc: 'Lossless' },
+    { value: 'wav', label: 'WAV', desc: 'Uncompressed' },
+];
 
 export default function YouTubePage() {
     const [url, setUrl] = useState('');
@@ -42,9 +71,44 @@ export default function YouTubePage() {
     const [videoInfo, setVideoInfo] = useState<VideoInfo | null>(null);
     const [formatType, setFormatType] = useState<'video' | 'audio'>('video');
     const [selectedQuality, setSelectedQuality] = useState<string>('');
+    const [outputFormat, setOutputFormat] = useState<string>('mp4');
+    const [startTime, setStartTime] = useState<string>('');
+    const [endTime, setEndTime] = useState<string>('');
     const [isDownloading, setIsDownloading] = useState(false);
     const [downloadResult, setDownloadResult] = useState<DownloadResult | null>(null);
+    const [downloadHistory, setDownloadHistory] = useState<DownloadHistoryItem[]>([]);
     const { toasts, addToast, removeToast } = useToast();
+
+    // LocalStorage helpers
+    const getHistory = useCallback((): DownloadHistoryItem[] => {
+        if (typeof window === 'undefined') return [];
+        try {
+            const data = localStorage.getItem(STORAGE_KEY);
+            return data ? JSON.parse(data) : [];
+        } catch {
+            return [];
+        }
+    }, []);
+
+    const saveToHistory = useCallback((item: DownloadHistoryItem) => {
+        const history = getHistory();
+        // Remove if exists (update)
+        const filtered = history.filter(h => h.id !== item.id);
+        const updated = [item, ...filtered].slice(0, 20); // Keep max 20 items
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+        setDownloadHistory(updated);
+    }, [getHistory]);
+
+    const removeFromHistory = useCallback((id: string) => {
+        const history = getHistory();
+        const updated = history.filter(h => h.id !== id);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+        setDownloadHistory(updated);
+    }, [getHistory]);
+
+    const isExpired = (expiresAt: number): boolean => {
+        return Date.now() > expiresAt;
+    };
 
     const formatDuration = (seconds: number) => {
         const mins = Math.floor(seconds / 60);
@@ -57,6 +121,46 @@ export default function YouTubePage() {
         if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
         return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
     };
+
+    // Parse time string to seconds (supports mm:ss or just seconds)
+    const parseTimeToSeconds = (time: string): number => {
+        if (!time) return 0;
+        if (time.includes(':')) {
+            const parts = time.split(':').map(Number);
+            if (parts.length === 2) return parts[0] * 60 + parts[1];
+            if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+        }
+        return parseFloat(time) || 0;
+    };
+
+    // Calculate estimated clip size based on duration ratio
+    const getEstimatedClipSize = (fullSize: number | undefined): number | undefined => {
+        if (!fullSize || !videoInfo) return fullSize;
+        if (!startTime && !endTime) return fullSize;
+
+        const fullDuration = videoInfo.duration;
+        if (!fullDuration) return fullSize;
+
+        const startSec = parseTimeToSeconds(startTime);
+        const endSec = endTime ? parseTimeToSeconds(endTime) : fullDuration;
+        const clipDuration = Math.max(0, Math.min(endSec, fullDuration) - startSec);
+
+        // Calculate proportional size
+        const ratio = clipDuration / fullDuration;
+        return Math.round(fullSize * ratio);
+    };
+
+    // Load and cleanup history on mount
+    useEffect(() => {
+        const history = getHistory();
+        // Filter out expired items
+        const now = Date.now();
+        const validHistory = history.filter(item => item.expiresAt > now);
+        if (validHistory.length !== history.length) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(validHistory));
+        }
+        setDownloadHistory(validHistory);
+    }, [getHistory]);
 
     const handleSearch = async () => {
         if (!url.trim()) {
@@ -101,6 +205,9 @@ export default function YouTubePage() {
                     url,
                     formatType,
                     quality: selectedQuality,
+                    outputFormat,
+                    startTime: startTime || undefined,
+                    endTime: endTime || undefined,
                 }),
             });
 
@@ -121,7 +228,7 @@ export default function YouTubePage() {
     };
 
     const pollDownloadStatus = async (id: string) => {
-        const maxAttempts = 60; // 5 minutes
+        const maxAttempts = 180; // 15 minutes (180 * 5s = 900s)
         let attempts = 0;
 
         const poll = async () => {
@@ -133,12 +240,33 @@ export default function YouTubePage() {
                 if (data.status === 'completed') {
                     setIsDownloading(false);
                     addToast('Download ready!', 'success');
+                    // Save to history
+                    if (videoInfo) {
+                        const now = Date.now();
+                        saveToHistory({
+                            id: data.id,
+                            title: videoInfo.title,
+                            thumbnail: videoInfo.thumbnail,
+                            format: outputFormat,
+                            quality: selectedQuality,
+                            downloadUrl: data.downloadUrl,
+                            fileSize: data.fileSize || 0,
+                            createdAt: now,
+                            expiresAt: now + EXPIRATION_MS,
+                        });
+                    }
                 } else if (data.status === 'failed') {
                     setIsDownloading(false);
                     addToast(data.error || 'Download failed', 'error');
-                } else if (attempts < maxAttempts) {
-                    attempts++;
-                    setTimeout(poll, 1000); // Poll every 1 second for smoother progress
+                } else if (data.status === 'queued' || data.status === 'processing' || data.status === 'pending') {
+                    // Continue polling for queued, processing, or pending status
+                    if (attempts < maxAttempts) {
+                        attempts++;
+                        setTimeout(poll, 2000); // Poll every 2 seconds for queued items
+                    } else {
+                        setIsDownloading(false);
+                        addToast('Download timed out', 'error');
+                    }
                 } else {
                     setIsDownloading(false);
                     addToast('Download timed out', 'error');
@@ -156,6 +284,38 @@ export default function YouTubePage() {
         if (downloadResult?.downloadUrl) {
             window.open(`${API_BASE}${downloadResult.downloadUrl}`, '_blank');
         }
+    };
+
+    const handleHistoryDownload = (item: DownloadHistoryItem) => {
+        if (isExpired(item.expiresAt)) {
+            addToast('This download has expired and is no longer available', 'error');
+            removeFromHistory(item.id);
+            return;
+        }
+        window.open(`${API_BASE}${item.downloadUrl}`, '_blank');
+    };
+
+    const copyShareLink = async (item: DownloadHistoryItem) => {
+        if (isExpired(item.expiresAt)) {
+            addToast('This download has expired and cannot be shared', 'error');
+            removeFromHistory(item.id);
+            return;
+        }
+        const shareUrl = `${API_BASE}${item.downloadUrl}`;
+        try {
+            await navigator.clipboard.writeText(shareUrl);
+            addToast('Download link copied to clipboard!', 'success');
+        } catch {
+            addToast('Failed to copy link', 'error');
+        }
+    };
+
+    const getTimeRemaining = (expiresAt: number): string => {
+        const remaining = expiresAt - Date.now();
+        if (remaining <= 0) return 'Expired';
+        const minutes = Math.floor(remaining / 60000);
+        if (minutes < 60) return `${minutes}m left`;
+        return `${Math.floor(minutes / 60)}h ${minutes % 60}m left`;
     };
 
     const resetAll = () => {
@@ -229,26 +389,72 @@ export default function YouTubePage() {
                                     className={`${styles.formatTab} ${formatType === 'video' ? styles.active : ''}`}
                                     onClick={() => {
                                         setFormatType('video');
+                                        setOutputFormat('mp4');
                                         if (videoInfo.videoFormats.length > 0) {
                                             setSelectedQuality(videoInfo.videoFormats[0].quality);
                                         }
                                     }}
                                 >
                                     <PlayIcon size={18} />
-                                    Video (MP4)
+                                    Video
                                 </button>
                                 <button
                                     className={`${styles.formatTab} ${formatType === 'audio' ? styles.active : ''}`}
                                     onClick={() => {
                                         setFormatType('audio');
+                                        setOutputFormat('mp3');
                                         if (videoInfo.audioFormats.length > 0) {
                                             setSelectedQuality(videoInfo.audioFormats[0].quality);
                                         }
                                     }}
                                 >
                                     <MusicIcon size={18} />
-                                    Audio (MP3)
+                                    Audio
                                 </button>
+                            </div>
+
+                            {/* Output Format Selector */}
+                            <div className={styles.formatSelector}>
+                                <label>Output Format:</label>
+                                <select
+                                    value={outputFormat}
+                                    onChange={(e) => setOutputFormat(e.target.value)}
+                                    className={styles.formatSelect}
+                                    disabled={isDownloading}
+                                >
+                                    {(formatType === 'video' ? VIDEO_FORMATS : AUDIO_FORMATS).map((fmt) => (
+                                        <option key={fmt.value} value={fmt.value}>
+                                            {fmt.label} - {fmt.desc}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {/* Clip Time Selector */}
+                            <div className={styles.clipSelector}>
+                                <label>✂️ Clip (optional):</label>
+                                <div className={styles.clipInputs}>
+                                    <input
+                                        type="text"
+                                        value={startTime}
+                                        onChange={(e) => setStartTime(e.target.value)}
+                                        placeholder="Start (0:00)"
+                                        className={styles.clipInput}
+                                        disabled={isDownloading}
+                                    />
+                                    <span>to</span>
+                                    <input
+                                        type="text"
+                                        value={endTime}
+                                        onChange={(e) => setEndTime(e.target.value)}
+                                        placeholder={`End (${formatDuration(videoInfo.duration)})`}
+                                        className={styles.clipInput}
+                                        disabled={isDownloading}
+                                    />
+                                </div>
+                                {(startTime || endTime) && (
+                                    <span className={styles.clipWarning}>⚠️ Full video will be downloaded first, then cut</span>
+                                )}
                             </div>
 
                             {/* Quality Options */}
@@ -261,6 +467,9 @@ export default function YouTubePage() {
                                         disabled={isDownloading}
                                     >
                                         <span className={styles.qualityLabel}>{format.quality}</span>
+                                        {format.filesize && (
+                                            <span className={styles.qualitySize}>{formatSize(getEstimatedClipSize(format.filesize) ?? null)}</span>
+                                        )}
                                     </button>
                                 ))}
                             </div>
@@ -274,9 +483,13 @@ export default function YouTubePage() {
                                 {isDownloading ? (
                                     <>
                                         <div className={styles.spinner}></div>
-                                        {downloadResult?.progress !== undefined && downloadResult.progress > 0
-                                            ? `Downloading... ${downloadResult.progress}%`
-                                            : 'Processing...'}
+                                        {downloadResult?.status === 'queued' && downloadResult.queuePosition
+                                            ? `Queued (Position ${downloadResult.queuePosition})`
+                                            : downloadResult?.progress !== undefined && downloadResult.progress > 0
+                                                ? downloadResult.progress >= 100
+                                                    ? 'Processing video...'
+                                                    : `Downloading... ${downloadResult.progress}%`
+                                                : 'Starting...'}
                                     </>
                                 ) : (
                                     <>
@@ -321,6 +534,56 @@ export default function YouTubePage() {
                     <button className={styles.newSearchBtn} onClick={resetAll}>
                         Download Another Video
                     </button>
+                )}
+
+                {/* Download History */}
+                {downloadHistory.length > 0 && (
+                    <div className={styles.historySection}>
+                        <h3 className={styles.historyTitle}>📥 Recent Downloads</h3>
+                        <p className={styles.historySubtitle}>Links expire after 1 hour</p>
+                        <div className={styles.historyList}>
+                            {downloadHistory.map((item) => (
+                                <div key={item.id} className={styles.historyItem}>
+                                    <div className={styles.historyThumbnail}>
+                                        <img src={item.thumbnail} alt={item.title} />
+                                    </div>
+                                    <div className={styles.historyInfo}>
+                                        <h4 className={styles.historyItemTitle}>{item.title}</h4>
+                                        <div className={styles.historyMeta}>
+                                            <span>{item.format.toUpperCase()} • {item.quality}</span>
+                                            <span className={styles.historyTimer}>
+                                                <ClockIcon size={12} />
+                                                {getTimeRemaining(item.expiresAt)}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div className={styles.historyActions}>
+                                        <button
+                                            className={styles.historyDownloadBtn}
+                                            onClick={() => handleHistoryDownload(item)}
+                                            title="Download"
+                                        >
+                                            <DownloadIcon size={16} />
+                                        </button>
+                                        <button
+                                            className={styles.historyShareBtn}
+                                            onClick={() => copyShareLink(item)}
+                                            title="Copy Link"
+                                        >
+                                            <CopyIcon size={16} />
+                                        </button>
+                                        <button
+                                            className={styles.historyDeleteBtn}
+                                            onClick={() => removeFromHistory(item.id)}
+                                            title="Remove"
+                                        >
+                                            <XIcon size={16} />
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
                 )}
 
                 {/* Features */}

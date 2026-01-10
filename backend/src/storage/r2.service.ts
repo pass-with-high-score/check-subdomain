@@ -50,6 +50,39 @@ export class R2Service {
     }
 
     /**
+     * Upload an object from file path using streaming (memory efficient)
+     * @param objectKey - The object key (path) in R2
+     * @param filePath - Local file path to upload
+     * @param contentType - MIME type
+     * @returns The file size in bytes
+     */
+    async uploadObjectFromFile(objectKey: string, filePath: string, contentType: string): Promise<number> {
+        const fs = await import('fs');
+        const { stat } = await import('fs/promises');
+
+        try {
+            const fileStats = await stat(filePath);
+            const fileSize = fileStats.size;
+            const stream = fs.createReadStream(filePath);
+
+            const command = new PutObjectCommand({
+                Bucket: this.bucket,
+                Key: objectKey,
+                Body: stream,
+                ContentType: contentType,
+                ContentLength: fileSize,
+            });
+
+            await this.r2Client.send(command);
+            this.logger.debug(`Uploaded object from file: ${objectKey} (${(fileSize / 1024 / 1024).toFixed(2)} MB)`);
+            return fileSize;
+        } catch (error) {
+            this.logger.error(`Failed to upload object ${objectKey}:`, error);
+            throw error;
+        }
+    }
+
+    /**
      * Get an object from R2 storage
      */
     async getObject(objectKey: string): Promise<Buffer> {
