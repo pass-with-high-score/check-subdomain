@@ -117,5 +117,42 @@ export class CleanupService {
             this.logger.error('❌ Speech cleanup failed:', error);
         }
     }
+
+    /**
+     * Cleanup expired YouTube downloads - runs every hour
+     */
+    @Cron(CronExpression.EVERY_HOUR)
+    async handleYouTubeCleanup() {
+        this.logger.log('🧹 Starting YouTube downloads cleanup...');
+
+        try {
+            const expiredDownloads = await this.databaseService.getExpiredYouTubeDownloads();
+
+            if (expiredDownloads.length === 0) {
+                this.logger.log('✅ No expired YouTube downloads found');
+                return;
+            }
+
+            let deleted = 0;
+            let failed = 0;
+
+            for (const download of expiredDownloads) {
+                try {
+                    if (download.object_key) {
+                        await this.r2Service.deleteObject(download.object_key);
+                    }
+                    await this.databaseService.deleteYouTubeDownload(download.id);
+                    deleted++;
+                } catch (error) {
+                    this.logger.error(`Failed to delete YouTube download ${download.id}:`, error);
+                    failed++;
+                }
+            }
+
+            this.logger.log(`✅ YouTube cleanup complete: ${deleted} deleted, ${failed} failed`);
+        } catch (error) {
+            this.logger.error('❌ YouTube cleanup failed:', error);
+        }
+    }
 }
 

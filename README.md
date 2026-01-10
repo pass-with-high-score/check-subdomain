@@ -17,6 +17,7 @@ Free online developer tools. No signup required, 100% client-side processing for
 | **File Transfer** | Share any file with expiring download links | S3/R2 |
 | **Time Capsule** | Lock files until a future date | S3/R2 |
 | **Speech to Text** | Transcribe audio with word-level timestamps and seek | Server (Deepgram) |
+| **YouTube Downloader** | Download YouTube videos and audio in various qualities | Server (ytdl-core) |
 | **ANeko Builder** | Create custom skins for ANeko Reborn Android app | Client-side |
 | **Anonymous Chat** | Real-time public chat with random usernames | PostgreSQL |
 

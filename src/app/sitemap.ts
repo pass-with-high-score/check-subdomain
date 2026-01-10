@@ -84,6 +84,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
             priority: 0.8,
         },
         {
+            url: `${baseUrl}/youtube`,
+            lastModified,
+            changeFrequency: 'monthly',
+            priority: 0.8,
+        },
+        {
             url: `${baseUrl}/chat`,
             lastModified,
             changeFrequency: 'weekly',

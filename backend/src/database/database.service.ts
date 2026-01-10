@@ -202,5 +202,25 @@ export class DatabaseService implements OnModuleInit {
     async deleteSpeechTranscription(id: string) {
         return this.sql`DELETE FROM speech_transcriptions WHERE id = ${id}`;
     }
+
+    // ============ YouTube Downloads ============
+
+    /**
+     * Get expired YouTube downloads
+     */
+    async getExpiredYouTubeDownloads() {
+        return this.sql`
+            SELECT id, object_key 
+            FROM youtube_downloads 
+            WHERE expires_at < NOW()
+        `;
+    }
+
+    /**
+     * Delete a YouTube download by ID
+     */
+    async deleteYouTubeDownload(id: string) {
+        return this.sql`DELETE FROM youtube_downloads WHERE id = ${id}`;
+    }
 }
 

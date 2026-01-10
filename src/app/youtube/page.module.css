@@ -1,0 +1,461 @@
+/* YouTube Downloader Page - Neo-Brutalism Style */
+
+.container {
+    min-height: 100vh;
+}
+
+.backgroundGradient {
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(135deg, #FFFEF0 0%, #FFE4E1 50%, #E6E6FA 100%);
+    z-index: -1;
+}
+
+.main {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.title {
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 2.5rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    margin: 0 0 0.5rem 0;
+    text-shadow: 4px 4px 0px var(--neo-red);
+}
+
+.subtitle {
+    font-size: 1rem;
+    color: var(--text-muted);
+    margin: 0;
+}
+
+/* Input Section */
+.inputSection {
+    margin-bottom: 2rem;
+}
+
+.searchBox {
+    display: flex;
+    gap: 0;
+    background: var(--neo-white);
+    border: 4px solid var(--neo-black);
+    box-shadow: 8px 8px 0px var(--neo-black);
+}
+
+.urlInput {
+    flex: 1;
+    padding: 1rem 1.25rem;
+    font-size: 1rem;
+    border: none;
+    background: transparent;
+    outline: none;
+    font-family: inherit;
+}
+
+.urlInput::placeholder {
+    color: var(--text-muted);
+}
+
+.searchBtn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem 1.5rem;
+    background: var(--neo-red);
+    border: none;
+    border-left: 4px solid var(--neo-black);
+    color: var(--neo-white);
+    font-family: 'Lexend Mega', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.searchBtn:hover:not(:disabled) {
+    background: #cc0000;
+}
+
+.searchBtn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Video Card */
+.videoCard {
+    background: var(--neo-white);
+    border: 4px solid var(--neo-black);
+    box-shadow: 8px 8px 0px var(--neo-black);
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+}
+
+.videoThumbnail {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16/9;
+    background: var(--neo-black);
+}
+
+.videoThumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.duration {
+    position: absolute;
+    bottom: 0.75rem;
+    right: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    background: rgba(0, 0, 0, 0.85);
+    color: var(--neo-white);
+    padding: 0.35rem 0.6rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.videoDetails {
+    padding: 1.25rem;
+}
+
+.videoTitle {
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    margin: 0 0 0.5rem 0;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.videoAuthor {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin: 0 0 1rem 0;
+}
+
+/* Format Tabs */
+.formatTabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 1rem;
+    border: 3px solid var(--neo-black);
+}
+
+.formatTab {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background: var(--neo-white);
+    border: none;
+    font-family: 'Lexend Mega', sans-serif;
+    font-weight: 700;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.formatTab:first-child {
+    border-right: 3px solid var(--neo-black);
+}
+
+.formatTab.active {
+    background: var(--neo-black);
+    color: var(--neo-white);
+}
+
+.formatTab:hover:not(.active) {
+    background: var(--neo-yellow);
+}
+
+/* Quality Options */
+.qualityOptions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.qualityBtn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    background: var(--bg-primary);
+    border: 3px solid var(--neo-black);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    min-width: 80px;
+}
+
+.qualityBtn:hover:not(:disabled) {
+    background: var(--neo-yellow);
+}
+
+.qualityBtn.selected {
+    background: var(--neo-green);
+    box-shadow: 4px 4px 0px var(--neo-black);
+}
+
+.qualityBtn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.qualityLabel {
+    font-family: 'Lexend Mega', sans-serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+}
+
+.qualitySize {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+/* Download Button */
+.downloadBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    width: 100%;
+    padding: 1rem 1.5rem;
+    background: var(--neo-red);
+    border: 4px solid var(--neo-black);
+    box-shadow: 6px 6px 0px var(--neo-black);
+    color: var(--neo-white);
+    font-family: 'Lexend Mega', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.downloadBtn:hover:not(:disabled) {
+    transform: translate(-2px, -2px);
+    box-shadow: 8px 8px 0px var(--neo-black);
+}
+
+.downloadBtn:active:not(:disabled) {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0px var(--neo-black);
+}
+
+.downloadBtn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Download Result */
+.downloadReady {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: var(--neo-green);
+    border: 3px solid var(--neo-black);
+    text-align: center;
+}
+
+.downloadReady p {
+    margin: 0 0 0.75rem 0;
+    font-weight: 600;
+}
+
+.getFileBtn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    background: var(--neo-white);
+    border: 3px solid var(--neo-black);
+    box-shadow: 4px 4px 0px var(--neo-black);
+    font-family: 'Lexend Mega', sans-serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.getFileBtn:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0px var(--neo-black);
+}
+
+.downloadError {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: var(--neo-red);
+    color: var(--neo-white);
+    border: 3px solid var(--neo-black);
+    text-align: center;
+}
+
+.downloadError p {
+    margin: 0;
+    font-weight: 600;
+}
+
+/* Progress Bar */
+.progressContainer {
+    width: 100%;
+    height: 20px;
+    background: var(--bg-primary);
+    border: 3px solid var(--neo-black);
+    margin-top: 0.75rem;
+    overflow: hidden;
+}
+
+.progressBar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--neo-green), #90EE90);
+    transition: width 0.3s ease;
+}
+
+/* New Search Button */
+.newSearchBtn {
+    display: block;
+    width: 100%;
+    padding: 1rem;
+    background: var(--neo-white);
+    border: 4px solid var(--neo-black);
+    box-shadow: 6px 6px 0px var(--neo-black);
+    font-family: 'Lexend Mega', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    margin-bottom: 2rem;
+}
+
+.newSearchBtn:hover {
+    background: var(--neo-yellow);
+    transform: translate(-2px, -2px);
+    box-shadow: 8px 8px 0px var(--neo-black);
+}
+
+/* Spinner */
+.spinner {
+    width: 20px;
+    height: 20px;
+    border: 3px solid currentColor;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Features */
+.features {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.feature {
+    background: var(--neo-white);
+    border: 3px solid var(--neo-black);
+    padding: 1.25rem;
+    text-align: center;
+}
+
+.featureIcon {
+    width: 48px;
+    height: 48px;
+    margin: 0 auto 0.75rem;
+    background: var(--neo-yellow);
+    border: 3px solid var(--neo-black);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.feature h4 {
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    margin: 0 0 0.5rem 0;
+}
+
+.feature p {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    line-height: 1.4;
+    margin: 0;
+}
+
+/* Disclaimer */
+.disclaimer {
+    margin-top: 2rem;
+    padding: 1rem;
+    background: var(--neo-yellow);
+    border: 3px solid var(--neo-black);
+    text-align: center;
+    font-size: 0.85rem;
+    line-height: 1.5;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+    .main {
+        padding: 1rem;
+    }
+
+    .title {
+        font-size: 1.75rem;
+    }
+
+    .searchBox {
+        flex-direction: column;
+    }
+
+    .searchBtn {
+        border-left: none;
+        border-top: 4px solid var(--neo-black);
+        justify-content: center;
+    }
+
+    .formatTabs {
+        flex-direction: column;
+    }
+
+    .formatTab:first-child {
+        border-right: none;
+        border-bottom: 3px solid var(--neo-black);
+    }
+
+    .qualityOptions {
+        justify-content: center;
+    }
+
+    .features {
+        grid-template-columns: 1fr;
+    }
+}

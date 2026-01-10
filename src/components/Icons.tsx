@@ -516,4 +516,21 @@ export function TimerIcon({ className, size = 24, ...props }: IconProps) {
     );
 }
 
+export function PlayIcon({ className, size = 24, ...props }: IconProps) {
+    return (
+        <svg viewBox="0 0 24 24" width={size} height={size} className={className} fill="currentColor" {...props}>
+            <polygon points="5 3 19 12 5 21 5 3" />
+        </svg>
+    );
+}
+
+export function MusicIcon({ className, size = 24, ...props }: IconProps) {
+    return (
+        <svg viewBox="0 0 24 24" width={size} height={size} className={className} fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" {...props}>
+            <path d="M9 18V5l12-2v13" />
+            <circle cx="6" cy="18" r="3" />
+            <circle cx="18" cy="16" r="3" />
+        </svg>
+    );
+}
 

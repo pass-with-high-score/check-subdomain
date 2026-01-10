@@ -11,7 +11,7 @@ const lexendMega = Lexend_Mega({
 
 const siteConfig = {
   name: "DevTools",
-  description: "Free online developer tools: Subdomain Scanner, OTP Generator, Base64 Converter, JSON Server, Webhook Tester, Image Uploader, File Transfer, Time Capsule, Speech to Text, ANeko Builder, and Community Chat. No signup required.",
+  description: "Free online developer tools: Subdomain Scanner, OTP Generator, Base64 Converter, JSON Server, Webhook Tester, Image Uploader, File Transfer, Time Capsule, Speech to Text, YouTube Downloader, ANeko Builder, and Community Chat. No signup required.",
   url: process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000",
 };
 
@@ -37,6 +37,8 @@ export const metadata: Metadata = {
     "time capsule",
     "speech to text",
     "audio transcription",
+    "youtube downloader",
+    "youtube to mp3",
     "ANeko skin builder",
     "free online tools",
     "privacy tools",
