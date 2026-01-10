@@ -1,0 +1,340 @@
+/* Chat Widget - Neo-Brutalism Style */
+
+.toggleButton {
+    position: fixed;
+    bottom: 100px;
+    right: 2rem;
+    width: 60px;
+    height: 60px;
+    background: var(--neo-cyan);
+    border: 4px solid var(--neo-black);
+    box-shadow: 6px 6px 0px var(--neo-black);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+    z-index: 1000;
+    color: var(--neo-black);
+}
+
+.toggleButton:hover {
+    transform: translate(-3px, -3px);
+    box-shadow: 9px 9px 0px var(--neo-black);
+}
+
+.toggleButton:active {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0px var(--neo-black);
+}
+
+.toggleButton.open {
+    background: var(--neo-pink);
+}
+
+.badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: var(--neo-red);
+    color: var(--neo-white);
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border: 3px solid var(--neo-black);
+    min-width: 20px;
+    text-align: center;
+}
+
+.chatWindow {
+    position: fixed;
+    bottom: 176px;
+    right: 2rem;
+    width: 380px;
+    max-width: calc(100vw - 4rem);
+    height: 500px;
+    max-height: calc(100vh - 200px);
+    background: var(--neo-white);
+    border: 4px solid var(--neo-black);
+    box-shadow: 12px 12px 0px var(--neo-black);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    z-index: 999;
+    animation: slideUp 0.15s ease;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.header {
+    padding: 1rem 1.25rem;
+    background: var(--neo-black);
+    color: var(--neo-white);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.headerInfo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.title {
+    font-family: 'Lexend Mega', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+}
+
+.status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.statusDot {
+    width: 10px;
+    height: 10px;
+    background: var(--neo-red);
+    border: 2px solid var(--neo-white);
+}
+
+.statusDot.connected {
+    background: var(--neo-green);
+}
+
+.username {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--neo-cyan);
+}
+
+.userRow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.rerandomBtn {
+    background: transparent;
+    border: none;
+    color: var(--neo-white);
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.7;
+    transition: all 0.15s ease;
+}
+
+.rerandomBtn:hover {
+    opacity: 1;
+    color: var(--neo-cyan);
+}
+
+.messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    background: var(--bg-primary);
+}
+
+.messages::-webkit-scrollbar {
+    width: 10px;
+}
+
+.messages::-webkit-scrollbar-track {
+    background: var(--neo-white);
+    border: 2px solid var(--neo-black);
+}
+
+.messages::-webkit-scrollbar-thumb {
+    background: var(--neo-black);
+}
+
+.emptyState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--text-muted);
+    text-align: center;
+}
+
+.emptyState p {
+    margin: 0;
+    font-weight: 600;
+}
+
+.emptyHint {
+    font-size: 13px;
+    margin-top: 4px !important;
+    font-weight: 400;
+}
+
+.message {
+    background: var(--neo-white);
+    border: 3px solid var(--neo-black);
+    box-shadow: 4px 4px 0px var(--neo-black);
+    padding: 10px 14px;
+    max-width: 85%;
+}
+
+.message.own {
+    align-self: flex-end;
+    background: var(--neo-cyan);
+}
+
+.messageHeader {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.messageUser {
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.messageTime {
+    font-size: 10px;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.messageContent {
+    font-size: 14px;
+    color: var(--text-primary);
+    line-height: 1.4;
+    word-break: break-word;
+}
+
+.inputArea {
+    padding: 1rem;
+    background: var(--neo-white);
+    border-top: 4px solid var(--neo-black);
+    display: flex;
+    gap: 10px;
+}
+
+.input {
+    flex: 1;
+    background: var(--bg-primary);
+    border: 3px solid var(--neo-black);
+    padding: 10px 14px;
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--text-primary);
+    outline: none;
+    transition: all 0.15s ease;
+}
+
+.input::placeholder {
+    color: var(--text-muted);
+}
+
+.input:focus {
+    box-shadow: 4px 4px 0px var(--neo-black);
+    transform: translate(-2px, -2px);
+}
+
+.input:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.sendButton {
+    width: 44px;
+    height: 44px;
+    background: var(--neo-green);
+    border: 3px solid var(--neo-black);
+    box-shadow: 4px 4px 0px var(--neo-black);
+    color: var(--neo-black);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+}
+
+.sendButton:hover:not(:disabled) {
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0px var(--neo-black);
+}
+
+.sendButton:active:not(:disabled) {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0px var(--neo-black);
+}
+
+.sendButton:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.rateLimitWarning {
+    flex: 1;
+    background: var(--neo-red);
+    border: 3px solid var(--neo-black);
+    padding: 12px 16px;
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--neo-white);
+    text-align: center;
+    text-transform: uppercase;
+}
+
+@media (max-width: 480px) {
+    .toggleButton {
+        bottom: 90px;
+        right: 1.5rem;
+        width: 54px;
+        height: 54px;
+    }
+
+    .chatWindow {
+        bottom: 160px;
+        right: 1rem;
+        left: 1rem;
+        width: auto;
+        height: 50vh;
+        box-shadow: 8px 8px 0px var(--neo-black);
+    }
+
+    .header {
+        padding: 0.875rem 1rem;
+    }
+
+    .messages {
+        padding: 0.75rem;
+    }
+
+    .inputArea {
+        padding: 0.75rem;
+    }
+}

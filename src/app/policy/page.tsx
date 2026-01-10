@@ -45,6 +45,7 @@ export default function PolicyPage() {
                         <li><strong>File Transfer:</strong> Files you upload are stored temporarily on our servers to provide download links. Files are automatically deleted after the expiration time you set.</li>
                         <li><strong>Time Capsule:</strong> Files and messages are encrypted and stored on our servers until the unlock date. After unlocking, data may be deleted after a period of inactivity.</li>
                         <li><strong>ANeko Builder:</strong> All skin editing happens 100% locally in your browser. We do not upload or store any of your skin files.</li>
+                        <li><strong>Anonymous Chat:</strong> Messages are stored temporarily in server memory and automatically cleared. No chat history is permanently saved. Random usernames are generated for each session.</li>
                     </ul>
 
                     <h3>2. Local Storage</h3>

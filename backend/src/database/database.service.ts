@@ -76,4 +76,74 @@ export class DatabaseService implements OnModuleInit {
     `;
         return result.length;
     }
+
+    // ============ Chat Messages ============
+
+    /**
+     * Initialize chat_messages table
+     */
+    async initChatMessagesTable() {
+        await this.sql`
+            CREATE TABLE IF NOT EXISTS chat_messages (
+                id VARCHAR(32) PRIMARY KEY,
+                username VARCHAR(100) NOT NULL,
+                color VARCHAR(7) NOT NULL,
+                message TEXT NOT NULL,
+                timestamp BIGINT NOT NULL,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+            )
+        `;
+        // Create index for faster queries
+        await this.sql`
+            CREATE INDEX IF NOT EXISTS idx_chat_messages_timestamp 
+            ON chat_messages(timestamp DESC)
+        `;
+        this.logger.log('✅ Chat messages table initialized');
+    }
+
+    /**
+     * Save a chat message
+     */
+    async saveChatMessage(msg: { id: string; username: string; color: string; message: string; timestamp: number }) {
+        await this.sql`
+            INSERT INTO chat_messages (id, username, color, message, timestamp)
+            VALUES (${msg.id}, ${msg.username}, ${msg.color}, ${msg.message}, ${msg.timestamp})
+        `;
+    }
+
+    /**
+     * Get recent chat messages (last 50)
+     */
+    async getRecentChatMessages(limit = 50) {
+        const rows = await this.sql`
+            SELECT id, username, color, message, timestamp
+            FROM chat_messages
+            ORDER BY timestamp DESC
+            LIMIT ${limit}
+        `;
+        // Reverse to get chronological order
+        return rows.reverse().map((row: { id: string; username: string; color: string; message: string; timestamp: string }) => ({
+            id: row.id,
+            username: row.username,
+            color: row.color,
+            message: row.message,
+            timestamp: Number(row.timestamp),
+        }));
+    }
+
+    /**
+     * Cleanup old chat messages (keep only last 100)
+     */
+    async cleanupOldChatMessages() {
+        const result = await this.sql`
+            DELETE FROM chat_messages
+            WHERE id NOT IN (
+                SELECT id FROM chat_messages
+                ORDER BY timestamp DESC
+                LIMIT 100
+            )
+            RETURNING id
+        `;
+        return result.length;
+    }
 }

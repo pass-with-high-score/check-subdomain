@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { SearchIcon, KeyIcon, ImageIcon, BoltIcon, ShieldIcon, SmartphoneIcon, GithubIcon, LinkIcon, CodeIcon, HourglassIcon, UploadIcon, FileIcon } from '@/components/Icons';
+import ChatWidget from '@/components/ChatWidget';
 import styles from './page.module.css';
 
 // Note: metadata must be exported from a server component
@@ -87,6 +88,9 @@ export default function HomePage() {
         <div className={styles.container}>
             {/* Background */}
             <div className={styles.backgroundGradient}></div>
+
+            {/* Chat Widget */}
+            <ChatWidget />
 
             {/* Hero Section */}
             <header className={styles.hero}>

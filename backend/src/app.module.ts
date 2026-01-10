@@ -4,6 +4,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { DatabaseModule } from './database/database.module';
 import { StorageModule } from './storage/storage.module';
 import { CleanupModule } from './cleanup/cleanup.module';
+import { ChatModule } from './chat/chat.module';
 
 @Module({
     imports: [
@@ -15,6 +16,7 @@ import { CleanupModule } from './cleanup/cleanup.module';
         DatabaseModule,
         StorageModule,
         CleanupModule,
+        ChatModule,
     ],
 })
 export class AppModule { }
