@@ -60,6 +60,7 @@ interface YtDlpVideoInfo {
 export class YouTubeService implements OnModuleInit {
     private readonly logger = new Logger(YouTubeService.name);
     private ytdlpPath = 'yt-dlp';
+    private cookiesPath: string | null = null;
     // In-memory progress tracking (faster than DB updates)
     private progressMap = new Map<string, number>();
 
@@ -71,6 +72,7 @@ export class YouTubeService implements OnModuleInit {
     async onModuleInit() {
         await this.initTable();
         this.checkYtDlp();
+        this.checkCookies();
     }
 
     private checkYtDlp() {
@@ -79,6 +81,17 @@ export class YouTubeService implements OnModuleInit {
             this.logger.log(`📺 yt-dlp version: ${version}`);
         } catch {
             this.logger.warn('⚠️ yt-dlp not found. Please install it: brew install yt-dlp');
+        }
+    }
+
+    private checkCookies() {
+        // Check for cookies file from env or default path
+        const cookiesFile = process.env.YOUTUBE_COOKIES_PATH || './youtube-cookies.txt';
+        if (fs.existsSync(cookiesFile)) {
+            this.cookiesPath = cookiesFile;
+            this.logger.log(`🍪 YouTube cookies loaded from: ${cookiesFile}`);
+        } else {
+            this.logger.log('ℹ️ No YouTube cookies file found. Some videos may be blocked.');
         }
     }
 
@@ -131,8 +144,9 @@ export class YouTubeService implements OnModuleInit {
 
         try {
             // Use yt-dlp to get video info with anti-bot measures
+            const cookiesArg = this.cookiesPath ? `--cookies "${this.cookiesPath}"` : '';
             const result = execSync(
-                `${this.ytdlpPath} -j --no-download --user-agent "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" --extractor-args "youtube:player_client=web" "${url}"`,
+                `${this.ytdlpPath} -j --no-download ${cookiesArg} --user-agent "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" --extractor-args "youtube:player_client=web" "${url}"`,
                 { encoding: 'utf-8', maxBuffer: 10 * 1024 * 1024 }
             );
 
@@ -269,6 +283,11 @@ export class YouTubeService implements OnModuleInit {
                 '--no-check-certificates',
                 '--retries', '3',
             ];
+
+            // Add cookies if available
+            if (this.cookiesPath) {
+                args.push('--cookies', this.cookiesPath);
+            }
 
             if (request.formatType === 'audio') {
                 args.push('-x', '--audio-format', 'mp3');
