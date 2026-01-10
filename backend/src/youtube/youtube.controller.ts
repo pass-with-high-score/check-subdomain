@@ -54,43 +54,14 @@ export class YouTubeController {
     }
 
     /**
-     * Stream downloaded file with Range support
+     * Redirect to presigned URL for direct download from R2
      */
     @Get(':id/file')
-    async streamFile(
+    async downloadFile(
         @Param('id') id: string,
-        @Headers('range') range: string | undefined,
         @Res() res: Response,
     ): Promise<void> {
-        const { buffer, contentType, filename } = await this.youtubeService.getDownloadedFile(id);
-        const fileSize = buffer.length;
-
-        // Set filename for download
-        const encodedFilename = encodeURIComponent(filename);
-
-        if (range) {
-            const parts = range.replace(/bytes=/, '').split('-');
-            const start = parseInt(parts[0], 10);
-            const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
-            const chunkSize = end - start + 1;
-
-            res.status(206);
-            res.set({
-                'Content-Range': `bytes ${start}-${end}/${fileSize}`,
-                'Accept-Ranges': 'bytes',
-                'Content-Length': chunkSize,
-                'Content-Type': contentType,
-                'Content-Disposition': `attachment; filename*=UTF-8''${encodedFilename}`,
-            });
-            res.end(buffer.subarray(start, end + 1));
-        } else {
-            res.set({
-                'Accept-Ranges': 'bytes',
-                'Content-Length': fileSize,
-                'Content-Type': contentType,
-                'Content-Disposition': `attachment; filename*=UTF-8''${encodedFilename}`,
-            });
-            res.end(buffer);
-        }
+        const downloadUrl = await this.youtubeService.getDownloadUrl(id);
+        res.redirect(302, downloadUrl);
     }
 }

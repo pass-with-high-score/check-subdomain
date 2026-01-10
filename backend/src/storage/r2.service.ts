@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { S3Client, DeleteObjectCommand, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { Readable } from 'stream';
 
 @Injectable()
@@ -126,6 +127,32 @@ export class R2Service {
             this.logger.debug(`Deleted object: ${objectKey}`);
         } catch (error) {
             this.logger.error(`Failed to delete object ${objectKey}:`, error);
+            throw error;
+        }
+    }
+
+    /**
+     * Generate a presigned URL for direct download from R2
+     * @param objectKey - The object key (path) in R2
+     * @param expiresIn - URL expiration time in seconds (default: 1 hour)
+     * @param filename - Optional filename for Content-Disposition header
+     * @returns Presigned URL for direct download
+     */
+    async getPresignedUrl(objectKey: string, expiresIn = 3600, filename?: string): Promise<string> {
+        try {
+            const command = new GetObjectCommand({
+                Bucket: this.bucket,
+                Key: objectKey,
+                ResponseContentDisposition: filename
+                    ? `attachment; filename*=UTF-8''${encodeURIComponent(filename)}`
+                    : undefined,
+            });
+
+            const url = await getSignedUrl(this.r2Client, command, { expiresIn });
+            this.logger.debug(`Generated presigned URL for: ${objectKey}`);
+            return url;
+        } catch (error) {
+            this.logger.error(`Failed to generate presigned URL for ${objectKey}:`, error);
             throw error;
         }
     }

@@ -335,50 +335,64 @@ export class YouTubeService implements OnModuleInit {
         const videoId = this.extractVideoId(request.url) || 'unknown';
 
         try {
-            // Get video info first
+            // Get video info first (includes actual filesizes from yt-dlp)
             let title = 'YouTube Video';
             let duration = 0;
+            let actualFilesize = 0;
             try {
                 const info = await this.getVideoInfo(request.url);
                 title = info.title;
                 duration = info.duration;
+
+                // Get actual filesize for requested quality from yt-dlp response
+                if (request.formatType === 'video') {
+                    const format = info.videoFormats.find(f => f.quality === request.quality || f.value === request.quality.replace('p', ''));
+                    if (format?.filesize) {
+                        actualFilesize = format.filesize;
+                    }
+                } else {
+                    const format = info.audioFormats.find(f => f.quality === request.quality || f.value === request.quality);
+                    if (format?.filesize) {
+                        actualFilesize = format.filesize;
+                    }
+                }
             } catch {
                 // Ignore error, use default title
             }
 
-            // Estimate file size based on duration and quality
-            // Average bitrates: 1080p ~5Mbps, 720p ~2.5Mbps, 480p ~1Mbps, audio ~128kbps
-            if (duration > 0) {
-                // For clip mode: still check FULL video size since we download entire video first
-                // This prevents trying to clip from very large videos
-                const isClipMode = !!(request.startTime || request.endTime);
+            // Check file size - prefer actual filesize from yt-dlp, fallback to estimate
+            const isClipMode = !!(request.startTime || request.endTime);
+            let estimatedSize = actualFilesize;
 
+            // Fallback to estimated size if no actual filesize available
+            if (!estimatedSize && duration > 0) {
                 let estimatedBitrate = 1000; // 1 Mbps default
                 if (request.formatType === 'video') {
                     const height = parseInt(request.quality.replace('p', '')) || 720;
-                    if (height >= 1080) estimatedBitrate = 5000;
-                    else if (height >= 720) estimatedBitrate = 2500;
-                    else if (height >= 480) estimatedBitrate = 1000;
-                    else estimatedBitrate = 500;
+                    if (height >= 2160) estimatedBitrate = 20000; // 4K ~20Mbps
+                    else if (height >= 1440) estimatedBitrate = 12000; // 2K ~12Mbps
+                    else if (height >= 1080) estimatedBitrate = 8000; // 1080p ~8Mbps
+                    else if (height >= 720) estimatedBitrate = 5000; // 720p ~5Mbps
+                    else if (height >= 480) estimatedBitrate = 2500;
+                    else estimatedBitrate = 1000;
                 } else {
-                    estimatedBitrate = 128; // Audio only
+                    estimatedBitrate = 192; // Audio only
                 }
+                estimatedSize = (duration * estimatedBitrate * 1000) / 8; // bytes
+            }
 
-                // For clip mode, check full video size; for normal mode, check requested duration
-                const estimatedSize = (duration * estimatedBitrate * 1000) / 8; // bytes
-                if (estimatedSize > this.MAX_FILE_SIZE) {
-                    const sizeMB = Math.round(estimatedSize / 1024 / 1024);
-                    const maxMB = Math.round(this.MAX_FILE_SIZE / 1024 / 1024);
-                    this.logger.warn(`⚠️ Video too large: ~${sizeMB}MB (max ${maxMB}MB) - ${title}`);
-                    if (isClipMode) {
-                        throw new BadRequestException(
-                            `Full video is too large (~${sizeMB}MB). Clip mode still downloads the entire video first. Maximum allowed is ${maxMB}MB. Try a shorter source video.`
-                        );
-                    } else {
-                        throw new BadRequestException(
-                            `Video is too large (~${sizeMB}MB). Maximum allowed size is ${maxMB}MB. Try a lower quality or shorter video.`
-                        );
-                    }
+            if (estimatedSize > this.MAX_FILE_SIZE) {
+                const sizeMB = Math.round(estimatedSize / 1024 / 1024);
+                const maxMB = Math.round(this.MAX_FILE_SIZE / 1024 / 1024);
+                this.logger.warn(`⚠️ Video too large: ~${sizeMB}MB (max ${maxMB}MB) - ${title}`);
+                if (isClipMode) {
+                    throw new BadRequestException(
+                        `Full video is too large (~${sizeMB}MB). Clip mode still downloads the entire video first. Maximum allowed is ${maxMB}MB. Try a shorter source video.`
+                    );
+                } else {
+                    throw new BadRequestException(
+                        `Video is too large (~${sizeMB}MB). Maximum allowed size is ${maxMB}MB. Try a lower quality or shorter video.`
+                    );
                 }
             }
 
@@ -630,9 +644,10 @@ export class YouTubeService implements OnModuleInit {
             }
 
             // Upload to R2 using streaming (memory efficient)
-            const sanitizedTitle = (await this.getVideoTitle(id)) || 'video';
-            const filename = `${sanitizedTitle.replace(/[^a-zA-Z0-9\s\-_]/g, '').substring(0, 80)}.${ext}`;
-            const objectKey = `youtube/${id}/${filename}`;
+            const videoTitle = (await this.getVideoTitle(id)) || 'video';
+            // Store original Unicode filename in DB, use simple ID-based key for R2
+            const displayFilename = `${videoTitle.replace(/[<>:"/\\|?*\x00-\x1f]/g, '').trim().substring(0, 150)}.${ext}`;
+            const objectKey = `youtube/${id}/video.${ext}`; // Simple R2-safe key
 
             // Get content type based on extension
             const contentTypeMap: Record<string, string> = {
@@ -650,6 +665,11 @@ export class YouTubeService implements OnModuleInit {
             const contentType = contentTypeMap[ext] || (request.formatType === 'video' ? 'video/mp4' : 'audio/mpeg');
 
             this.logger.log(`☁️ [${id}] Uploading to R2 (streaming)...`);
+            // Set progress > 100 to indicate uploading phase
+            this.progressMap.set(id, 101);
+            await this.databaseService.sql`
+                UPDATE youtube_downloads SET status = 'uploading' WHERE id = ${id}
+            `;
             const fileSize = await this.r2Service.uploadObjectFromFile(objectKey, downloadedFile, contentType);
             this.logger.log(`☁️ [${id}] Upload complete!`);
 
@@ -660,11 +680,11 @@ export class YouTubeService implements OnModuleInit {
             // Update database
             await this.databaseService.sql`
                 UPDATE youtube_downloads 
-                SET status = 'completed', object_key = ${objectKey}, filename = ${filename}, file_size = ${fileSize}
+                SET status = 'completed', object_key = ${objectKey}, filename = ${displayFilename}, file_size = ${fileSize}
                 WHERE id = ${id}
             `;
 
-            this.logger.log(`🎉 [${id}] Download complete: ${filename} (${(fileSize / 1024 / 1024).toFixed(2)} MB)`);
+            this.logger.log(`🎉 [${id}] Download complete: ${displayFilename} (${(fileSize / 1024 / 1024).toFixed(2)} MB)`);
             // Cleanup progress map
             this.progressMap.delete(id);
         } catch (error) {
@@ -755,11 +775,11 @@ export class YouTubeService implements OnModuleInit {
     }
 
     /**
-     * Get downloaded file
+     * Get presigned download URL for direct R2 download
      */
-    async getDownloadedFile(id: string): Promise<{ buffer: Buffer; contentType: string; filename: string }> {
+    async getDownloadUrl(id: string): Promise<string> {
         const records = await this.databaseService.sql`
-            SELECT object_key, filename, format_type FROM youtube_downloads WHERE id = ${id} AND status = 'completed'
+            SELECT object_key, filename FROM youtube_downloads WHERE id = ${id} AND status = 'completed'
         `;
 
         if (records.length === 0) {
@@ -767,10 +787,8 @@ export class YouTubeService implements OnModuleInit {
         }
 
         const record = records[0];
-        const buffer = await this.r2Service.getObject(record.object_key);
-        const contentType = record.format_type === 'video' ? 'video/mp4' : 'audio/mpeg';
-
-        return { buffer, contentType, filename: record.filename || 'download' };
+        // Generate presigned URL that expires in 1 hour with filename for download
+        return this.r2Service.getPresignedUrl(record.object_key, 3600, record.filename);
     }
 
     /**

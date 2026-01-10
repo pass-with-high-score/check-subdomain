@@ -42,7 +42,7 @@ interface DownloadResult {
     id: string;
     videoId: string;
     title: string;
-    status: 'pending' | 'queued' | 'processing' | 'completed' | 'failed';
+    status: 'pending' | 'queued' | 'processing' | 'uploading' | 'completed' | 'failed';
     progress?: number;
     downloadUrl?: string;
     fileSize?: number;
@@ -259,7 +259,7 @@ export default function YouTubePage() {
                 } else if (data.status === 'failed') {
                     setIsDownloading(false);
                     addToast(data.error || 'Download failed', 'error');
-                } else if (data.status === 'queued' || data.status === 'processing' || data.status === 'pending') {
+                } else if (data.status === 'queued' || data.status === 'processing' || data.status === 'uploading' || data.status === 'pending') {
                     // Continue polling for queued, processing, or pending status
                     if (attempts < maxAttempts) {
                         attempts++;
@@ -514,11 +514,13 @@ export default function YouTubePage() {
                                         <div className={styles.spinner}></div>
                                         {downloadResult?.status === 'queued' && downloadResult.queuePosition
                                             ? `Queued (Position ${downloadResult.queuePosition})`
-                                            : downloadResult?.progress !== undefined && downloadResult.progress > 0
-                                                ? downloadResult.progress >= 100
-                                                    ? 'Processing video...'
-                                                    : `Downloading... ${downloadResult.progress}%`
-                                                : 'Starting...'}
+                                            : downloadResult?.status === 'uploading'
+                                                ? 'Uploading to cloud...'
+                                                : downloadResult?.progress !== undefined && downloadResult.progress > 0
+                                                    ? downloadResult.progress >= 100
+                                                        ? 'Processing video...'
+                                                        : `Downloading... ${downloadResult.progress}%`
+                                                    : 'Starting...'}
                                     </>
                                 ) : (
                                     <>
