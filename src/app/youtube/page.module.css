@@ -234,13 +234,13 @@
     cursor: not-allowed;
 }
 
-/* Clip Time Selector */
+/* Clip Time Selector with Range Slider */
 .clipSelector {
     display: flex;
-    align-items: center;
-    gap: 1rem;
+    flex-direction: column;
+    gap: 0.75rem;
     margin-bottom: 1rem;
-    padding: 0.75rem 1rem;
+    padding: 1rem;
     background: var(--neo-yellow);
     border: 3px solid var(--neo-black);
 }
@@ -253,43 +253,118 @@
     white-space: nowrap;
 }
 
-.clipInputs {
+.clipSliderContainer {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    flex: 1;
+    gap: 0.75rem;
+    width: 100%;
 }
 
-.clipInputs span {
-    font-size: 0.8rem;
-    color: var(--text-muted);
-}
-
-.clipInput {
-    width: 90px;
-    padding: 0.4rem 0.6rem;
+.clipTimeLabel {
+    font-family: monospace;
+    font-size: 0.85rem;
+    font-weight: 600;
+    min-width: 45px;
+    text-align: center;
     background: var(--neo-white);
     border: 2px solid var(--neo-black);
-    font-family: inherit;
-    font-size: 0.85rem;
-    text-align: center;
-    outline: none;
+    padding: 0.35rem 0.5rem;
 }
 
-.clipInput:focus {
+.clipRangeWrapper {
+    position: relative;
+    flex: 1;
+    height: 12px;
+}
+
+.clipRangeTrack {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 8px;
+    transform: translateY(-50%);
+    background: rgba(0, 0, 0, 0.15);
+    border: 2px solid var(--neo-black);
+    pointer-events: none;
+}
+
+.clipRangeProgress {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    background: var(--neo-green);
+    transition: left 0.1s ease, width 0.1s ease;
+}
+
+.clipRangeInput {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+    z-index: 2;
+    -webkit-appearance: none;
+    appearance: none;
+    pointer-events: none;
+}
+
+.clipRangeInput::-webkit-slider-thumb {
+    pointer-events: auto;
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    background: var(--neo-white);
+    border: 3px solid var(--neo-black);
+    cursor: grab;
     box-shadow: 2px 2px 0px var(--neo-black);
 }
 
-.clipInput:disabled {
+.clipRangeInput::-moz-range-thumb {
+    pointer-events: auto;
+    width: 20px;
+    height: 20px;
+    background: var(--neo-white);
+    border: 3px solid var(--neo-black);
+    cursor: grab;
+    box-shadow: 2px 2px 0px var(--neo-black);
+    border-radius: 0;
+}
+
+.clipRangeInput:active::-webkit-slider-thumb {
+    cursor: grabbing;
+    background: var(--neo-green);
+}
+
+.clipRangeInput:active::-moz-range-thumb {
+    cursor: grabbing;
+    background: var(--neo-green);
+}
+
+.clipRangeInput:disabled {
+    cursor: not-allowed;
+}
+
+.clipRangeInput:disabled::-webkit-slider-thumb {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.clipRangeInput:disabled::-moz-range-thumb {
     opacity: 0.5;
     cursor: not-allowed;
 }
 
 .clipWarning {
-    font-size: 0.7rem;
-    color: var(--neo-red);
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.75rem;
+    color: var(--neo-black);
     font-weight: 600;
-    margin-top: 0.25rem;
 }
 
 .qualityBtn {
@@ -570,7 +645,7 @@
 }
 
 .historyShareBtn {
-    background: var(--neo-blue);
+    background: var(--neo-cyan);
 }
 
 .historyDeleteBtn {
@@ -591,6 +666,23 @@
     grid-template-columns: repeat(3, 1fr);
     gap: 1rem;
     margin-top: 2rem;
+}
+
+/* Center the last 2 items in second row */
+.features .feature:nth-child(4) {
+    grid-column: 1 / 2;
+    margin-left: auto;
+    margin-right: 0;
+    width: calc(100% - 0.5rem);
+    transform: translateX(50%);
+}
+
+.features .feature:nth-child(5) {
+    grid-column: 3 / 4;
+    margin-left: 0;
+    margin-right: auto;
+    width: calc(100% - 0.5rem);
+    transform: translateX(-50%);
 }
 
 .feature {
@@ -627,6 +719,10 @@
 
 /* Disclaimer */
 .disclaimer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
     margin-top: 2rem;
     padding: 1rem;
     background: var(--neo-yellow);
@@ -671,5 +767,13 @@
 
     .features {
         grid-template-columns: 1fr;
+    }
+
+    .features .feature:nth-child(4),
+    .features .feature:nth-child(5) {
+        grid-column: auto;
+        width: 100%;
+        transform: none;
+        margin: 0;
     }
 }

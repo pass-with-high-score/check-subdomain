@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Navigation from '@/components/Navigation';
 import Toast, { useToast } from '@/components/Toast';
-import { PlayIcon, MusicIcon, DownloadIcon, SearchIcon, ClockIcon, CopyIcon, XIcon } from '@/components/Icons';
+import { PlayIcon, MusicIcon, DownloadIcon, SearchIcon, ClockIcon, CopyIcon, XIcon, ScissorsIcon, WarningIcon } from '@/components/Icons';
 import styles from './page.module.css';
 
 const API_BASE = process.env.NEXT_PUBLIC_CHAT_URL || 'http://localhost:3001';
@@ -430,30 +430,58 @@ export default function YouTubePage() {
                                 </select>
                             </div>
 
-                            {/* Clip Time Selector */}
+                            {/* Clip Time Selector with Range Slider */}
                             <div className={styles.clipSelector}>
-                                <label>✂️ Clip (optional):</label>
-                                <div className={styles.clipInputs}>
-                                    <input
-                                        type="text"
-                                        value={startTime}
-                                        onChange={(e) => setStartTime(e.target.value)}
-                                        placeholder="Start (0:00)"
-                                        className={styles.clipInput}
-                                        disabled={isDownloading}
-                                    />
-                                    <span>to</span>
-                                    <input
-                                        type="text"
-                                        value={endTime}
-                                        onChange={(e) => setEndTime(e.target.value)}
-                                        placeholder={`End (${formatDuration(videoInfo.duration)})`}
-                                        className={styles.clipInput}
-                                        disabled={isDownloading}
-                                    />
+                                <label><ScissorsIcon size={16} /> Clip (optional):</label>
+                                <div className={styles.clipSliderContainer}>
+                                    <span className={styles.clipTimeLabel}>{startTime || '0:00'}</span>
+                                    <div className={styles.clipRangeWrapper}>
+                                        <div className={styles.clipRangeTrack}>
+                                            <div
+                                                className={styles.clipRangeProgress}
+                                                style={{
+                                                    left: `${(parseTimeToSeconds(startTime) / videoInfo.duration) * 100}%`,
+                                                    width: `${((endTime ? parseTimeToSeconds(endTime) : videoInfo.duration) - parseTimeToSeconds(startTime)) / videoInfo.duration * 100}%`
+                                                }}
+                                            />
+                                        </div>
+                                        <input
+                                            type="range"
+                                            min="0"
+                                            max={videoInfo.duration}
+                                            step="1"
+                                            value={parseTimeToSeconds(startTime)}
+                                            onChange={(e) => {
+                                                const newStart = parseInt(e.target.value);
+                                                const endSec = endTime ? parseTimeToSeconds(endTime) : videoInfo.duration;
+                                                if (newStart < endSec) {
+                                                    setStartTime(formatDuration(newStart));
+                                                }
+                                            }}
+                                            className={styles.clipRangeInput}
+                                            disabled={isDownloading}
+                                        />
+                                        <input
+                                            type="range"
+                                            min="0"
+                                            max={videoInfo.duration}
+                                            step="1"
+                                            value={endTime ? parseTimeToSeconds(endTime) : videoInfo.duration}
+                                            onChange={(e) => {
+                                                const newEnd = parseInt(e.target.value);
+                                                const startSec = parseTimeToSeconds(startTime);
+                                                if (newEnd > startSec) {
+                                                    setEndTime(formatDuration(newEnd));
+                                                }
+                                            }}
+                                            className={styles.clipRangeInput}
+                                            disabled={isDownloading}
+                                        />
+                                    </div>
+                                    <span className={styles.clipTimeLabel}>{endTime || formatDuration(videoInfo.duration)}</span>
                                 </div>
                                 {(startTime || endTime) && (
-                                    <span className={styles.clipWarning}>⚠️ Full video will be downloaded first, then cut</span>
+                                    <span className={styles.clipWarning}><WarningIcon size={14} /> Full video will be downloaded first, then cut</span>
                                 )}
                             </div>
 
@@ -539,7 +567,7 @@ export default function YouTubePage() {
                 {/* Download History */}
                 {downloadHistory.length > 0 && (
                     <div className={styles.historySection}>
-                        <h3 className={styles.historyTitle}>📥 Recent Downloads</h3>
+                        <h3 className={styles.historyTitle}><DownloadIcon size={18} /> Recent Downloads</h3>
                         <p className={styles.historySubtitle}>Links expire after 1 hour</p>
                         <div className={styles.historyList}>
                             {downloadHistory.map((item) => (
@@ -592,15 +620,29 @@ export default function YouTubePage() {
                         <div className={styles.featureIcon}>
                             <PlayIcon size={24} />
                         </div>
-                        <h4>Video MP4</h4>
-                        <p>Download in 360p, 720p, 1080p quality</p>
+                        <h4>Video Formats</h4>
+                        <p>MP4, WebM, MKV up to 4K quality</p>
                     </div>
                     <div className={styles.feature}>
                         <div className={styles.featureIcon}>
                             <MusicIcon size={24} />
                         </div>
-                        <h4>Audio MP3</h4>
-                        <p>Extract audio in high quality MP3</p>
+                        <h4>Audio Formats</h4>
+                        <p>MP3, M4A, FLAC, Opus, WAV</p>
+                    </div>
+                    <div className={styles.feature}>
+                        <div className={styles.featureIcon}>
+                            <ScissorsIcon size={24} />
+                        </div>
+                        <h4>Clip Mode</h4>
+                        <p>Cut video by start/end time</p>
+                    </div>
+                    <div className={styles.feature}>
+                        <div className={styles.featureIcon}>
+                            <DownloadIcon size={24} />
+                        </div>
+                        <h4>500MB Limit</h4>
+                        <p>Max file size per download</p>
                     </div>
                     <div className={styles.feature}>
                         <div className={styles.featureIcon}>
@@ -613,7 +655,7 @@ export default function YouTubePage() {
 
                 {/* Disclaimer */}
                 <p className={styles.disclaimer}>
-                    ⚠️ This tool is for personal use only. Please respect copyright laws and YouTube&apos;s Terms of Service.
+                    <WarningIcon size={16} /> This tool is for personal use only. Please respect copyright laws and YouTube&apos;s Terms of Service.
                 </p>
             </main>
         </div>
