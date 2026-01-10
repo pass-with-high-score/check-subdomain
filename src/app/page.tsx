@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { SearchIcon, KeyIcon, ImageIcon, BoltIcon, ShieldIcon, SmartphoneIcon, GithubIcon, LinkIcon, CodeIcon, CatIcon, HourglassIcon } from '@/components/Icons';
+import Image from 'next/image';
+import { SearchIcon, KeyIcon, ImageIcon, BoltIcon, ShieldIcon, SmartphoneIcon, GithubIcon, LinkIcon, CodeIcon, HourglassIcon } from '@/components/Icons';
 import styles from './page.module.css';
 
 // Note: metadata must be exported from a server component
@@ -62,7 +63,7 @@ const tools: Tool[] = [
         href: '/aneko-builder',
         title: 'ANeko Builder',
         description: 'Create custom skins for ANeko Reborn Android pet app with visual animation editor.',
-        icon: <CatIcon size={32} />,
+        icon: <Image src="/aneko.png" alt="ANeko" width={32} height={32} style={{ imageRendering: 'smooth' }} />,
         color: 'cyan',
     },
 ];

@@ -66,38 +66,6 @@ export default function MetadataEditorModal({ onClose }: MetadataEditorModalProp
                                 onChange={(e) => handleChange('proximityDistance', e.target.value)}
                             />
                         </div>
-                        <div className={styles.formGroup}>
-                            <label>Initial State</label>
-                            <input
-                                type="text"
-                                value={editedParams.initialState}
-                                onChange={(e) => handleChange('initialState', e.target.value)}
-                            />
-                        </div>
-                        <div className={styles.formGroup}>
-                            <label>Awake State</label>
-                            <input
-                                type="text"
-                                value={editedParams.awakeState}
-                                onChange={(e) => handleChange('awakeState', e.target.value)}
-                            />
-                        </div>
-                        <div className={styles.formGroup}>
-                            <label>Move State Prefix</label>
-                            <input
-                                type="text"
-                                value={editedParams.moveStatePrefix}
-                                onChange={(e) => handleChange('moveStatePrefix', e.target.value)}
-                            />
-                        </div>
-                        <div className={styles.formGroup}>
-                            <label>Wall State Prefix</label>
-                            <input
-                                type="text"
-                                value={editedParams.wallStatePrefix}
-                                onChange={(e) => handleChange('wallStatePrefix', e.target.value)}
-                            />
-                        </div>
                     </div>
                 </div>
                 <div className={styles.modalFooter}>

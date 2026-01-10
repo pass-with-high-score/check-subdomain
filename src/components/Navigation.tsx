@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import {
     SearchIcon,
@@ -11,7 +12,6 @@ import {
     GithubIcon,
     LinkIcon,
     CodeIcon,
-    CatIcon,
     HourglassIcon,
     ChevronDownIcon,
 } from './Icons';
@@ -35,7 +35,7 @@ const coreTools: NavItem[] = [
 const moreTools: NavItem[] = [
     { href: '/base64', label: 'Base64', icon: <ImageIcon size={18} /> },
     { href: '/capsule', label: 'Capsule', icon: <HourglassIcon size={18} /> },
-    { href: '/aneko-builder', label: 'ANeko', icon: <CatIcon size={18} /> },
+    { href: '/aneko-builder', label: 'ANeko', icon: <Image src="/aneko.png" alt="ANeko" width={18} height={18} style={{ imageRendering: 'pixelated' }} /> },
 ];
 
 // Menu icon for mobile

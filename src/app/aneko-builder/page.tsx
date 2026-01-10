@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import Image from 'next/image';
 import Navigation from '@/components/Navigation';
 import { SkinBuilderProvider, useSkinBuilder } from '@/lib/contexts/SkinBuilderContext';
 import { importSkinFromZip } from '@/lib/utils/skinImport';
@@ -74,7 +75,9 @@ function SkinBuilderContent() {
             {/* Header */}
             <header className={styles.header}>
                 <div className={styles.headerLeft}>
-                    <div className={styles.logoBox}>🐱</div>
+                    <div className={styles.logoBox}>
+                        <Image src="/aneko.png" alt="ANeko" width={28} height={28} style={{ imageRendering: 'smooth' }} />
+                    </div>
                     <h1 className={styles.title}>ANeko Builder</h1>
                 </div>
                 <div className={styles.headerActions}>
