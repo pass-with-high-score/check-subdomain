@@ -159,7 +159,7 @@ export class YouTubeService implements OnModuleInit {
             // Use yt-dlp to get video info with anti-bot measures
             const cookiesArg = this.cookiesPath ? `--cookies "${this.cookiesPath}"` : '';
             const result = execSync(
-                `${this.ytdlpPath} -j --no-download ${cookiesArg} --user-agent "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" --extractor-args "youtube:player_client=web" "${url}"`,
+                `${this.ytdlpPath} -j --no-download ${cookiesArg} --user-agent "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" --extractor-args "youtube:player_client=tv_embedded" "${url}"`,
                 { encoding: 'utf-8', maxBuffer: 10 * 1024 * 1024 }
             );
 
@@ -292,7 +292,7 @@ export class YouTubeService implements OnModuleInit {
                 '--no-warnings',
                 // Anti-bot measures
                 '--user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                '--extractor-args', 'youtube:player_client=web',
+                '--extractor-args', 'youtube:player_client=tv_embedded',
                 '--no-check-certificates',
                 '--retries', '3',
             ];
