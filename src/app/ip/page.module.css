@@ -1,0 +1,234 @@
+/* IP Checker Page - Neo-Brutalism Style */
+
+.container {
+    min-height: 100vh;
+}
+
+.backgroundGradient {
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(135deg, #FFFEF0 0%, #FFF8DC 50%, #FFFACD 100%);
+    z-index: -1;
+}
+
+.main {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.title {
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 2.5rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    margin: 0 0 0.5rem 0;
+    text-shadow: 4px 4px 0px var(--neo-cyan);
+}
+
+.subtitle {
+    font-size: 1rem;
+    color: var(--text-muted);
+    margin: 0;
+}
+
+/* Loading */
+.loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    padding: 4rem;
+    color: var(--text-muted);
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid var(--neo-black);
+    border-top-color: var(--neo-cyan);
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Error */
+.error {
+    text-align: center;
+    padding: 3rem;
+    background: var(--neo-white);
+    border: 4px solid var(--neo-black);
+    box-shadow: 8px 8px 0px var(--neo-black);
+}
+
+.retryBtn {
+    margin-top: 1rem;
+    padding: 0.75rem 1.5rem;
+    background: var(--neo-yellow);
+    border: 3px solid var(--neo-black);
+    box-shadow: 4px 4px 0px var(--neo-black);
+    font-family: 'Lexend Mega', sans-serif;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.retryBtn:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0px var(--neo-black);
+}
+
+/* Content */
+.content {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+/* IP Card */
+.ipCard {
+    background: var(--neo-black);
+    color: var(--neo-white);
+    padding: 2rem;
+    border: 4px solid var(--neo-black);
+    text-align: center;
+}
+
+.ipLabel {
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    opacity: 0.7;
+    margin-bottom: 0.5rem;
+}
+
+.ipValue {
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 2.5rem;
+    font-weight: 900;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.copyBtn {
+    background: transparent;
+    border: none;
+    color: var(--neo-cyan);
+    cursor: pointer;
+    padding: 0.5rem;
+    opacity: 0.7;
+    transition: opacity 0.15s;
+}
+
+.copyBtn:hover {
+    opacity: 1;
+}
+
+/* Grid */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+}
+
+/* Info Card */
+.infoCard {
+    background: var(--neo-white);
+    border: 4px solid var(--neo-black);
+    box-shadow: 8px 8px 0px var(--neo-black);
+    padding: 1.5rem;
+}
+
+.cardHeader {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 3px solid var(--neo-black);
+}
+
+.cardHeader h3 {
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 1rem;
+    text-transform: uppercase;
+    margin: 0;
+}
+
+.flag {
+    width: 32px;
+    height: auto;
+    border: 2px solid var(--neo-black);
+}
+
+.infoRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.infoRow:last-child {
+    border-bottom: none;
+}
+
+.label {
+    font-weight: 600;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.value {
+    font-weight: 700;
+    text-align: right;
+}
+
+/* Map */
+.mapContainer {
+    background: var(--neo-white);
+    border: 4px solid var(--neo-black);
+    box-shadow: 8px 8px 0px var(--neo-black);
+    overflow: hidden;
+}
+
+.map {
+    width: 100%;
+    height: 350px;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+    .main {
+        padding: 1rem;
+    }
+
+    .title {
+        font-size: 1.75rem;
+    }
+
+    .ipValue {
+        font-size: 1.5rem;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .ipCard {
+        padding: 1.5rem;
+    }
+
+    .map {
+        height: 250px;
+    }
+}
