@@ -130,9 +130,9 @@ export class YouTubeService implements OnModuleInit {
         }
 
         try {
-            // Use yt-dlp to get video info
+            // Use yt-dlp to get video info with anti-bot measures
             const result = execSync(
-                `${this.ytdlpPath} -j --no-download "${url}"`,
+                `${this.ytdlpPath} -j --no-download --user-agent "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" --extractor-args "youtube:player_client=web" "${url}"`,
                 { encoding: 'utf-8', maxBuffer: 10 * 1024 * 1024 }
             );
 
@@ -257,12 +257,17 @@ export class YouTubeService implements OnModuleInit {
                 ext = 'mp4';
             }
 
-            // Build yt-dlp command
+            // Build yt-dlp command with anti-bot measures
             const args = [
                 '-f', formatArg,
                 '-o', outputTemplate,
                 '--no-playlist',
                 '--no-warnings',
+                // Anti-bot measures
+                '--user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                '--extractor-args', 'youtube:player_client=web',
+                '--no-check-certificates',
+                '--retries', '3',
             ];
 
             if (request.formatType === 'audio') {
