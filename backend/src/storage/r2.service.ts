@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { S3Client, DeleteObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, DeleteObjectCommand, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
+import { Readable } from 'stream';
 
 @Injectable()
 export class R2Service {
@@ -29,6 +30,55 @@ export class R2Service {
     }
 
     /**
+     * Upload an object to R2 storage
+     */
+    async uploadObject(objectKey: string, body: Buffer, contentType: string): Promise<void> {
+        try {
+            const command = new PutObjectCommand({
+                Bucket: this.bucket,
+                Key: objectKey,
+                Body: body,
+                ContentType: contentType,
+            });
+
+            await this.r2Client.send(command);
+            this.logger.debug(`Uploaded object: ${objectKey}`);
+        } catch (error) {
+            this.logger.error(`Failed to upload object ${objectKey}:`, error);
+            throw error;
+        }
+    }
+
+    /**
+     * Get an object from R2 storage
+     */
+    async getObject(objectKey: string): Promise<Buffer> {
+        try {
+            const command = new GetObjectCommand({
+                Bucket: this.bucket,
+                Key: objectKey,
+            });
+
+            const response = await this.r2Client.send(command);
+
+            if (!response.Body) {
+                throw new Error('Empty response body');
+            }
+
+            // Convert stream to buffer
+            const stream = response.Body as Readable;
+            const chunks: Buffer[] = [];
+            for await (const chunk of stream) {
+                chunks.push(Buffer.from(chunk));
+            }
+            return Buffer.concat(chunks);
+        } catch (error) {
+            this.logger.error(`Failed to get object ${objectKey}:`, error);
+            throw error;
+        }
+    }
+
+    /**
      * Delete an object from R2 storage
      * @param objectKey - The object key (path) to delete
      */
@@ -47,3 +97,4 @@ export class R2Service {
         }
     }
 }
+

@@ -146,4 +146,61 @@ export class DatabaseService implements OnModuleInit {
         `;
         return result.length;
     }
+
+    // ============ Speech Transcriptions ============
+
+    /**
+     * Initialize speech_transcriptions table
+     */
+    async initSpeechTranscriptionsTable() {
+        await this.sql`
+            CREATE TABLE IF NOT EXISTS speech_transcriptions (
+                id VARCHAR(32) PRIMARY KEY,
+                object_key VARCHAR(255) NOT NULL,
+                filename VARCHAR(255) NOT NULL,
+                file_size BIGINT NOT NULL,
+                duration_seconds FLOAT,
+                status VARCHAR(20) DEFAULT 'pending',
+                transcript TEXT,
+                words JSONB,
+                language VARCHAR(10),
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+                expires_at TIMESTAMP WITH TIME ZONE NOT NULL
+            )
+        `;
+        // Add words column if it doesn't exist (for existing tables)
+        await this.sql`
+            ALTER TABLE speech_transcriptions 
+            ADD COLUMN IF NOT EXISTS words JSONB
+        `;
+        // Add paragraphs column if it doesn't exist
+        await this.sql`
+            ALTER TABLE speech_transcriptions 
+            ADD COLUMN IF NOT EXISTS paragraphs JSONB
+        `;
+        await this.sql`
+            CREATE INDEX IF NOT EXISTS idx_speech_expires 
+            ON speech_transcriptions(expires_at)
+        `;
+        this.logger.log('✅ Speech transcriptions table initialized');
+    }
+
+    /**
+     * Get expired speech transcriptions
+     */
+    async getExpiredSpeechTranscriptions() {
+        return this.sql`
+            SELECT id, object_key, filename 
+            FROM speech_transcriptions 
+            WHERE expires_at < NOW()
+        `;
+    }
+
+    /**
+     * Delete a speech transcription by ID
+     */
+    async deleteSpeechTranscription(id: string) {
+        return this.sql`DELETE FROM speech_transcriptions WHERE id = ${id}`;
+    }
 }
+

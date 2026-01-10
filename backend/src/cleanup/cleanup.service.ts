@@ -82,4 +82,40 @@ export class CleanupService {
             this.logger.error('❌ JSON bin cleanup failed:', error);
         }
     }
+
+    /**
+     * Cleanup expired speech transcriptions - runs every hour
+     */
+    @Cron(CronExpression.EVERY_HOUR)
+    async handleSpeechCleanup() {
+        this.logger.log('🧹 Starting speech transcription cleanup...');
+
+        try {
+            const expiredSpeech = await this.databaseService.getExpiredSpeechTranscriptions();
+
+            if (expiredSpeech.length === 0) {
+                this.logger.log('✅ No expired speech transcriptions found');
+                return;
+            }
+
+            let deleted = 0;
+            let failed = 0;
+
+            for (const speech of expiredSpeech) {
+                try {
+                    await this.r2Service.deleteObject(speech.object_key);
+                    await this.databaseService.deleteSpeechTranscription(speech.id);
+                    deleted++;
+                } catch (error) {
+                    this.logger.error(`Failed to delete speech ${speech.id}:`, error);
+                    failed++;
+                }
+            }
+
+            this.logger.log(`✅ Speech cleanup complete: ${deleted} deleted, ${failed} failed`);
+        } catch (error) {
+            this.logger.error('❌ Speech cleanup failed:', error);
+        }
+    }
 }
+
