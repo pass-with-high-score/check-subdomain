@@ -1287,36 +1287,36 @@ export default function YouTubePage() {
                         <div className={styles.featureIcon}>
                             <PlayIcon size={24} />
                         </div>
-                        <h4>Video Formats</h4>
-                        <p>MP4, WebM, MKV up to 4K quality</p>
-                    </div>
-                    <div className={styles.feature}>
-                        <div className={styles.featureIcon}>
-                            <MusicIcon size={24} />
-                        </div>
-                        <h4>Audio Formats</h4>
-                        <p>MP3, M4A, FLAC, Opus, WAV</p>
+                        <h4>High Quality</h4>
+                        <p>Download up to 4K resolution</p>
                     </div>
                     <div className={styles.feature}>
                         <div className={styles.featureIcon}>
                             <ScissorsIcon size={24} />
                         </div>
-                        <h4>Clip Mode</h4>
-                        <p>Cut video by start/end time</p>
+                        <h4>Skip Sponsors</h4>
+                        <p>Auto-remove sponsor segments</p>
                     </div>
                     <div className={styles.feature}>
                         <div className={styles.featureIcon}>
                             <DownloadIcon size={24} />
                         </div>
-                        <h4>500MB Limit</h4>
-                        <p>Max file size per download</p>
+                        <h4>Super Fast</h4>
+                        <p>16x faster with turbo mode</p>
+                    </div>
+                    <div className={styles.feature}>
+                        <div className={styles.featureIcon}>
+                            <MusicIcon size={24} />
+                        </div>
+                        <h4>Playlist</h4>
+                        <p>Download entire playlists</p>
                     </div>
                     <div className={styles.feature}>
                         <div className={styles.featureIcon}>
                             <ClockIcon size={24} />
                         </div>
-                        <h4>Auto Cleanup</h4>
-                        <p>Files auto-delete after 1 hour</p>
+                        <h4>Live Progress</h4>
+                        <p>See real-time download status</p>
                     </div>
                 </div>
 
