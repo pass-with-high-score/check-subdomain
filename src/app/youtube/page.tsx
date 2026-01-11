@@ -110,6 +110,7 @@ export default function YouTubePage() {
     const [outputFormat, setOutputFormat] = useState<string>('mp4');
     const [startTime, setStartTime] = useState<string>('');
     const [endTime, setEndTime] = useState<string>('');
+    const [clipTitle, setClipTitle] = useState<string>(''); // Chapter/clip title for filename
     const [embedSubtitles, setEmbedSubtitles] = useState(false);
     const [subtitleLang, setSubtitleLang] = useState('en');
     const [sponsorBlock, setSponsorBlock] = useState(false);
@@ -337,6 +338,7 @@ export default function YouTubePage() {
                     // Only send clip params if user actually changed from default (full video)
                     startTime: startTime && parseTimeToSeconds(startTime) > 0 ? startTime : undefined,
                     endTime: endTime && videoInfo && parseTimeToSeconds(endTime) < videoInfo.duration ? endTime : undefined,
+                    clipTitle: clipTitle || undefined, // Chapter title for filename prefix
                     // Subtitle embedding (video only)
                     embedSubtitles: formatType === 'video' && embedSubtitles ? true : undefined,
                     subtitleLang: formatType === 'video' && embedSubtitles ? subtitleLang : undefined,
@@ -1031,6 +1033,7 @@ export default function YouTubePage() {
                                                     onChange={() => {
                                                         setStartTime(formatDuration(chapter.startTime));
                                                         setEndTime(formatDuration(chapter.endTime));
+                                                        setClipTitle(chapter.title); // Save chapter title for filename
                                                     }}
                                                     disabled={isDownloading}
                                                 />
@@ -1047,6 +1050,7 @@ export default function YouTubePage() {
                                             onClick={() => {
                                                 setStartTime('');
                                                 setEndTime('');
+                                                setClipTitle(''); // Clear chapter title
                                             }}
                                             disabled={isDownloading}
                                         >

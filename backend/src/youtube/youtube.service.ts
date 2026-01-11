@@ -60,6 +60,7 @@ export interface DownloadRequest {
     outputFormat?: string; // video: mp4, webm, mkv | audio: mp3, m4a, opus, flac, wav
     startTime?: string; // Optional: clip start time (seconds or mm:ss)
     endTime?: string;   // Optional: clip end time (seconds or mm:ss)
+    clipTitle?: string; // Optional: chapter/clip title to use as filename prefix
     embedSubtitles?: boolean; // Optional: embed subtitles into video
     subtitleLang?: string;    // Optional: subtitle language code (en, vi, etc.)
     sponsorBlock?: boolean;   // Optional: remove sponsor segments using SponsorBlock
@@ -708,13 +709,21 @@ export class YouTubeService implements OnModuleInit {
                 args.push('--merge-output-format', outputFormat);
             }
 
+            // Track if we're in clip mode (for disabling aria2c later)
+            const isClipMode = !!(request.startTime || request.endTime);
+
             // Add clip download using --download-sections
             // Note: For long videos this will be slow as it streams from start
-            if (request.startTime || request.endTime) {
+            if (isClipMode) {
                 const start = request.startTime || '0';
                 const end = request.endTime || 'inf';
                 args.push('--download-sections', `*${start}-${end}`);
-                this.logger.log(`✂️ [${id}] Clip mode: ${start} to ${end}`);
+                // CRITICAL: Force keyframes at cut points to ensure accurate clipping
+                // Without this, video duration may be wrong and have black frames at the end
+                args.push('--force-keyframes-at-cuts');
+                // Prevent parallel stream issues that cause black frames
+                args.push('--compat-option', 'no-direct-merge');
+                this.logger.log(`✂️ [${id}] Clip mode: ${start} to ${end} (with keyframe re-encoding)`);
             }
 
             // Add subtitle embedding (video only)
@@ -737,8 +746,9 @@ export class YouTubeService implements OnModuleInit {
             }
 
             // Auto-use aria2c for large files (>100MB) for faster downloads
+            // BUT NOT for clip mode - aria2c conflicts with --download-sections causing black frames
             const ARIA2C_THRESHOLD = 100 * 1024 * 1024; // 100MB
-            if (request.estimatedFilesize && request.estimatedFilesize > ARIA2C_THRESHOLD) {
+            if (request.estimatedFilesize && request.estimatedFilesize > ARIA2C_THRESHOLD && !isClipMode) {
                 args.push(
                     '--downloader', 'aria2c',
                     // -x 16: 16 connections per server
@@ -917,10 +927,44 @@ export class YouTubeService implements OnModuleInit {
                 this.logger.log(`📁 [${id}] Found file at expected path`);
             }
 
+            // For clip mode: remux to fix container metadata duration
+            // The clipped file may contain extra streams (like subtitle/data) with original video duration
+            // QuickTime reads duration from the longest stream, causing wrong display
+            // We remux with explicit stream mapping to strip extra streams and fix metadata
+            if (isClipMode && request.formatType === 'video') {
+                const fixedFile = path.join(tmpDir, `yt_${id}_fixed.${ext}`);
+                this.logger.log(`🔧 [${id}] Fixing clip metadata with ffmpeg remux...`);
+                try {
+                    execSync(
+                        // Map only video (0:v:0) and audio (0:a:0) streams, strip everything else
+                        // -map_chapters -1: Remove chapters that have timestamps from original video (causes wrong duration)
+                        // -movflags +faststart moves metadata to front for better streaming
+                        `ffmpeg -y -i "${downloadedFile}" -map 0:v:0 -map 0:a:0 -map_chapters -1 -c copy -movflags +faststart "${fixedFile}"`,
+                        { encoding: 'utf-8', timeout: 60000 }
+                    );
+                    // Replace original with fixed file
+                    fs.unlinkSync(downloadedFile);
+                    fs.renameSync(fixedFile, downloadedFile);
+                    this.logger.log(`✅ [${id}] Clip metadata fixed successfully`);
+                } catch (remuxError) {
+                    this.logger.warn(`⚠️ [${id}] Failed to fix clip metadata: ${remuxError}`);
+                    // Continue with original file if remux fails
+                }
+            }
+
             // Upload to R2 using streaming (memory efficient)
             const videoTitle = (await this.getVideoTitle(id)) || 'video';
-            // Store original Unicode filename in DB, use simple ID-based key for R2
-            const displayFilename = `${videoTitle.replace(/[<>:"/\\|?*\x00-\x1f]/g, '').trim().substring(0, 150)}.${ext}`;
+            // Build filename: use clipTitle as prefix if provided (for chapter downloads)
+            const sanitize = (s: string) => s.replace(/[<>:"/\\|?*\x00-\x1f]/g, '').trim();
+            let displayFilename: string;
+            if (request.clipTitle && isClipMode) {
+                // Format: ClipTitle_VideoTitle.ext
+                const clipPart = sanitize(request.clipTitle).substring(0, 50);
+                const videoPart = sanitize(videoTitle).substring(0, 100);
+                displayFilename = `${clipPart}_${videoPart}.${ext}`;
+            } else {
+                displayFilename = `${sanitize(videoTitle).substring(0, 150)}.${ext}`;
+            }
             const objectKey = `youtube/${id}/video.${ext}`; // Simple R2-safe key
 
             // Get content type based on extension
