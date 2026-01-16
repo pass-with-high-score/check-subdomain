@@ -17,7 +17,7 @@ services:
       # Base URL
       - NEXT_PUBLIC_BASE_URL=${NEXT_PUBLIC_BASE_URL}
       # Chat Backend URL - points to backend service
-      - NEXT_PUBLIC_CHAT_URL=${NEXT_PUBLIC_CHAT_URL:-http://backend:3010}
+      - NEXT_PUBLIC_CHAT_URL=${NEXT_PUBLIC_CHAT_URL}
       # Database URL
       - DATABASE_URL=${DATABASE_URL}
       # S3/R2 Cloudflare Storage
