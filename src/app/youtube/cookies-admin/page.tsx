@@ -6,7 +6,7 @@ import Toast, { useToast } from '@/components/Toast';
 import { KeyIcon, UploadIcon, FileIcon, RefreshIcon, CookieIcon, ShieldIcon } from '@/components/Icons';
 import styles from './page.module.css';
 
-const API_BASE = process.env.NEXT_PUBLIC_CHAT_URL || 'http://localhost:3010';
+const API_BASE = process.env.NEXT_PUBLIC_CHAT_URL;
 const ADMIN_KEY_STORAGE = 'youtube_admin_key';
 
 interface CookiesStatus {

@@ -17,7 +17,7 @@ interface UserInfo {
     color: string;
 }
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_CHAT_URL || 'http://localhost:3010';
+const BACKEND_URL = process.env.NEXT_PUBLIC_CHAT_URL;
 const STORAGE_KEY = 'devtools_chat_user';
 
 // Load saved user from localStorage

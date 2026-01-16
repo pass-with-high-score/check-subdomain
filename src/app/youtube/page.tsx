@@ -6,7 +6,7 @@ import Toast, { useToast } from '@/components/Toast';
 import { PlayIcon, MusicIcon, DownloadIcon, SearchIcon, ClockIcon, CopyIcon, XIcon, ScissorsIcon, WarningIcon, ImageIcon, ListIcon, ChevronUpIcon, ChevronDownIcon, SkipForwardIcon, ArrowUpIcon, ArrowDownIcon, ArrowRightIcon, LightbulbIcon, BookOpenIcon, CheckCircleIcon, XCircleIcon, HourglassWaitIcon, BoltIcon } from '@/components/Icons';
 import styles from './page.module.css';
 
-const API_BASE = process.env.NEXT_PUBLIC_CHAT_URL || 'http://localhost:3010';
+const API_BASE = process.env.NEXT_PUBLIC_CHAT_URL;
 const STORAGE_KEY = 'youtube_downloads_history';
 const EXPIRATION_MS = 60 * 60 * 1000; // 1 hour
 
