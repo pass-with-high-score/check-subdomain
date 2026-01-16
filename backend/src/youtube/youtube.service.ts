@@ -647,13 +647,20 @@ export class YouTubeService implements OnModuleInit {
                 // Video with audio
                 const height = request.quality.replace('p', '');
 
-                // Choose format arg based on output format
-                if (outputFormat === 'webm') {
-                    // For WebM, prefer VP9 codec
-                    formatArg = `bestvideo[height<=${height}][vcodec^=vp9]+bestaudio[acodec^=opus]/bestvideo[height<=${height}]+bestaudio/best[height<=${height}]`;
+                if (height.toLowerCase() === 'best') {
+                    // Best quality without height restriction
+                    if (outputFormat === 'webm') {
+                        formatArg = `bestvideo[vcodec^=vp9]+bestaudio[acodec^=opus]/bestvideo+bestaudio/best`;
+                    } else {
+                        formatArg = `bestvideo[vcodec^=avc1]+bestaudio/bestvideo+bestaudio/best`;
+                    }
                 } else {
-                    // For MP4/MKV, prefer H.264 (avc1) for max compatibility
-                    formatArg = `bestvideo[height<=${height}][vcodec^=avc1]+bestaudio/bestvideo[height<=${height}]+bestaudio/best[height<=${height}]`;
+                    // Specific height restriction
+                    if (outputFormat === 'webm') {
+                        formatArg = `bestvideo[height<=${height}][vcodec^=vp9]+bestaudio[acodec^=opus]/bestvideo[height<=${height}]+bestaudio/best[height<=${height}]`;
+                    } else {
+                        formatArg = `bestvideo[height<=${height}][vcodec^=avc1]+bestaudio/bestvideo[height<=${height}]+bestaudio/best[height<=${height}]`;
+                    }
                 }
                 ext = outputFormat;
             }
