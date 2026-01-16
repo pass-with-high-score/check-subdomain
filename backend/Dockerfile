@@ -56,9 +56,6 @@ RUN mkdir -p /app/data && chown -R nestjs:nestjs /app/data
 # Set correct permissions
 RUN chown -R nestjs:nestjs /app
 
-# Switch to non-root user
-USER nestjs
-
 # Expose port
 EXPOSE 3010
 
