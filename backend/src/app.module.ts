@@ -7,6 +7,7 @@ import { CleanupModule } from './cleanup/cleanup.module';
 import { ChatModule } from './chat/chat.module';
 import { SpeechModule } from './speech/speech.module';
 import { YouTubeModule } from './youtube/youtube.module';
+import { ProxyModule } from './proxy/proxy.module';
 
 @Module({
     imports: [
@@ -21,6 +22,7 @@ import { YouTubeModule } from './youtube/youtube.module';
         ChatModule,
         SpeechModule,
         YouTubeModule,
+        ProxyModule,
     ],
 })
 export class AppModule { }
