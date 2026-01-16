@@ -289,7 +289,7 @@ export default function CookiesAdminPage() {
                 {/* Warning */}
                 <div className={styles.warningCard}>
                     <ShieldIcon size={20} />
-                    <span>This page is for administrators only. Never share your admin key.</span>
+                    <span>This page is for administrators only. Never share your admin key!</span>
                 </div>
             </main>
         </div>
