@@ -50,6 +50,9 @@ COPY --from=builder /app/dist ./dist
 # Copy youtube cookies if exists
 COPY --chown=nestjs:nestjs youtube-cookies.txt* ./
 
+# Create data directory for runtime files (cookies, etc.)
+RUN mkdir -p /app/data && chown -R nestjs:nestjs /app/data
+
 # Set correct permissions
 RUN chown -R nestjs:nestjs /app
 
