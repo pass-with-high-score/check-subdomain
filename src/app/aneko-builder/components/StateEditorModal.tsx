@@ -230,40 +230,6 @@ export default function StateEditorModal({ stateId, onClose }: StateEditorModalP
                     <button className={styles.modalClose} onClick={onClose}>×</button>
                 </div>
                 <div className={styles.modalContent}>
-                    {/* State Options */}
-                    <div className={styles.formRow} style={{ marginBottom: '1rem' }}>
-                        <div className={styles.formGroup}>
-                            <label>Next State (optional)</label>
-                            <input
-                                type="text"
-                                value={editedState.nextState || ''}
-                                onChange={(e) => setEditedState(prev => ({ ...prev, nextState: e.target.value || undefined }))}
-                                placeholder="e.g., wait"
-                            />
-                        </div>
-                        <div className={styles.formGroup}>
-                            <label>Options</label>
-                            <div style={{ display: 'flex', gap: '1rem', paddingTop: '0.5rem' }}>
-                                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem' }}>
-                                    <input
-                                        type="checkbox"
-                                        checked={editedState.checkMove || false}
-                                        onChange={(e) => setEditedState(prev => ({ ...prev, checkMove: e.target.checked }))}
-                                    />
-                                    checkMove
-                                </label>
-                                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem' }}>
-                                    <input
-                                        type="checkbox"
-                                        checked={editedState.checkWall || false}
-                                        onChange={(e) => setEditedState(prev => ({ ...prev, checkWall: e.target.checked }))}
-                                    />
-                                    checkWall
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-
                     {/* Frame Timeline */}
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                         <label style={{ fontWeight: 700, fontSize: '0.8rem', textTransform: 'uppercase' }}>
